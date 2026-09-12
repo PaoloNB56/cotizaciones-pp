@@ -12,7 +12,7 @@
 - Do not fetch or scrape Balanz. The user generates TXT and converts it on their PC with the existing converter.
 - No browser/mobile converter is requested.
 - A changed upload merges by date; supplied dates replace those dates only, preserving older history. Repeating the same canonical upload is idempotent.
-- Absence/removal of an upload leaves the confirmed history intact. An empty or malformed upload fails validation before publishing.
+- Absence/removal of an upload leaves the confirmed history intact. An empty or malformed recognized upload is rejected for that fund: retain its confirmed history and applied hash, warn, and allow other valid series to publish. Corrected uploads are retried. Unexpected files or unsafe directory structure still abort staging.
 - Uploads remain available on the source branch. Their hashes are recorded with the confirmed history so older unchanged inputs cannot overwrite later results.
 
 # Work Guidance
