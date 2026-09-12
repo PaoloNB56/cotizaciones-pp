@@ -1,10 +1,10 @@
 # Cotizaciones PP con GitHub Actions + Pages
 
-Esta es la opción elegida. La preparación local está hecha; cuenta/repositorio, ejecución Linux, publicación Pages y lectura en PP todavía requieren pruebas reales. No se necesita pCloud, Termux, registro de desarrollador ni token personal. No se creó ni activó ningún servicio externo durante la preparación.
+El repositorio público [PaoloNB56/cotizaciones-pp](https://github.com/PaoloNB56/cotizaciones-pp) está instalado e inicializado. La validación Linux, la primera publicación Pages y una actualización posterior pasaron el 11/09/2026. Las 17 URL se comprobaron sin parámetros de caché, con nueva generación e histórico conservado. No se necesita pCloud, Termux, registro de desarrollador ni token personal. Falta comprobar la lectura dentro de PP en los dispositivos del usuario.
 
 ## Uso cotidiano
 
-1. Desde el navegador del celular, abrir el repositorio → **Actions → Actualizar cotizaciones**.
+1. Desde el navegador del celular, abrir [Actions → Actualizar cotizaciones](https://github.com/PaoloNB56/cotizaciones-pp/actions/workflows/cotizaciones.yml).
 2. Pulsar **Run workflow**, dejar la rama principal y el modo **Actualizar**, y confirmar.
 3. Esperar que finalice correctamente. El resumen debe indicar **published_verified**, con últimas fechas por instrumento.
 4. Abrir PP y actualizar las cotizaciones históricas. La PC puede estar apagada.
@@ -13,7 +13,7 @@ Guardar la página de Actions como favorito o acceso directo del navegador. La a
 
 ## Instalación inicial
 
-Cuenta indicada por el usuario: **PaoloNB56**. Nombre de repositorio propuesto: **cotizaciones-pp**. Si se crea con ese nombre, la base Pages prevista será `https://paolonb56.github.io/cotizaciones-pp/`; no considerarla activa hasta completar la publicación y comprobarla.
+Esta instalación ya se completó para **PaoloNB56/cotizaciones-pp**. La base activa es `https://paolonb56.github.io/cotizaciones-pp/`. Los siguientes pasos se conservan para instalar una copia nueva; no repetir **Inicializar** en el uso cotidiano.
 
 1. Crear una cuenta normal de GitHub y verificar el correo.
 2. Crear un repositorio para este proyecto, por ejemplo `cotizaciones-pp`. Para GitHub Pages con GitHub Free debe ser **público**. Eso hace público el código y las cotizaciones cargadas: el paquete excluye cartera, transacciones, TXT originales, Excel y credenciales.
@@ -24,7 +24,7 @@ Cuenta indicada por el usuario: **PaoloNB56**. Nombre de repositorio propuesto: 
 7. Esperar éxito; guardar la URL Pages que muestra GitHub. Ejecutar **Actualizar** una segunda vez y comprobar que la misma URL de `publication.json` cambia de generación. El script verifica también todas las cotizaciones y la prueba sintética, sin parámetros para evitar caché.
 8. Configurar primero un instrumento en PP, luego los demás.
 
-El token de ejecución lo genera GitHub automáticamente y expira; no hay que crearlo, copiarlo ni guardarlo en el repositorio. Un repositorio público puede usar runners estándar de Actions gratuitamente según las condiciones actuales; no se han medido duración ni comportamiento de los proveedores desde GitHub. Fuentes: [Pages y planes](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), [inicio manual](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow), [costos de Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+El token de ejecución lo genera GitHub automáticamente y expira; no hay que crearlo, copiarlo ni guardarlo en el repositorio. Un repositorio público puede usar runners estándar de Actions gratuitamente según las condiciones actuales; la validación inicial tardó 27 segundos y la primera publicación también se completó correctamente desde GitHub; esos tiempos no son una garantía para ejecuciones futuras. Fuentes: [Pages y planes](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), [inicio manual](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow), [costos de Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
 
 ## Carga manual de FCI desde la PC
 
@@ -41,7 +41,7 @@ No subir TXT originales, capturas, datos de cuenta ni cartera a `entradas-fci`. 
 
 ## Contenido público previsto
 
-Las URL de ejemplo usan nombres ilustrativos. La base real será la URL del repositorio mostrada por Pages, normalmente `https://USUARIO.github.io/cotizaciones-pp/`.
+La base activa es `https://paolonb56.github.io/cotizaciones-pp/`. En los ejemplos siguientes, `BASE` representa esa dirección sin la barra final.
 
 Se despliegan únicamente estos 17 JSON de cotizaciones, todos en la raíz del sitio:
 
@@ -60,7 +60,7 @@ La rama pública `feed-history` guarda los 17 históricos y `_state.json` para c
 
 ## Configuración de PP
 
-En **Cotizaciones históricas**, elegir proveedor **JSON** y reemplazar localhost por la URL fija correspondiente. Por ejemplo `BASE/S30N6.json`.
+En **Cotizaciones históricas**, elegir proveedor **JSON** y reemplazar localhost por la URL fija correspondiente. Por ejemplo [S30N6.json](https://paolonb56.github.io/cotizaciones-pp/S30N6.json).
 
 | Campo | Valor |
 |---|---|
@@ -114,4 +114,4 @@ python -B -u github_feed.py stage --local --work .cloud-work/prueba-pages-01
 
 Este modo usa semillas locales; no consulta GitHub. El modo **Validar** dentro de Actions sí consulta el histórico remoto si ya existe. Ambos evitan publicar.
 
-Estado comprobado localmente: pruebas offline de FCI, recuperación, persistencia y URL; descarga completa en Windows y preparación de 17 series. Pendiente: cuenta/repositorio, autenticación automática del runner, despliegue/rollback reales, sobrescritura/caché pública y consumo en PP escritorio/móvil. Los originales JSON, TXT y Excel se verifican contra `baseline.sha256.json`.
+Estado comprobado localmente: pruebas offline de FCI, recuperación, persistencia y URL; descarga completa en Windows y preparación de 17 series. Comprobado en GitHub: [Validar](https://github.com/PaoloNB56/cotizaciones-pp/actions/runs/34663922757) y [primera publicación](https://github.com/PaoloNB56/cotizaciones-pp/actions/runs/34663988467), autenticación automática, histórico persistido y 17 URL públicas. La [segunda publicación](https://github.com/PaoloNB56/cotizaciones-pp/actions/runs/34664059981) también pasó: nueva generación y prueba sintética en las mismas URL, 17 series verificadas, todas las fechas anteriores conservadas y segundo commit histórico enlazado al primero. Pendiente: rollback real y consumo en PP escritorio/móvil. Los originales JSON, TXT y Excel se verifican contra `baseline.sha256.json`.

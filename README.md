@@ -7,8 +7,10 @@ Actualización manual desde el celular mediante **GitHub Actions**, con JSON pú
 - Conservación de históricos, validación completa antes de publicar y verificación de las URL.
 - Sin pCloud, Termux, token personal ni conversor web.
 
-**Instalación y uso:** [LEEME-NUBE.md](LEEME-NUBE.md).
+**Actualizar desde el celular:** [abrir Actions](https://github.com/PaoloNB56/cotizaciones-pp/actions/workflows/cotizaciones.yml) → **Run workflow → Actualizar → Run workflow**.
 
-En la primera instalación: configurar **Settings → Pages → Source: GitHub Actions**, ejecutar **Validar**, revisar el contenido público y ejecutar **Inicializar**. Para el uso diario: **Actions → Actualizar cotizaciones → Run workflow → Actualizar**.
+**Instrucciones y configuración de PP:** [LEEME-NUBE.md](LEEME-NUBE.md). Ejemplo de URL pública: [S30N6.json](https://paolonb56.github.io/cotizaciones-pp/S30N6.json).
 
-La preparación local no prueba el funcionamiento remoto. No subir cartera, transacciones, credenciales ni TXT originales a este repositorio público.
+Este repositorio ya está configurado e inicializado. Para el uso diario, elegir **Actualizar**. **Validar** comprueba los datos sin publicar; **Inicializar** se reserva para una instalación nueva sin histórico.
+
+La validación en Linux, la primera publicación y una actualización posterior se comprobaron en GitHub: 17 URL verificadas e histórico conservado. La lectura dentro de PP escritorio/móvil requiere configurar las URL y probarla en esos dispositivos. No subir cartera, transacciones, credenciales ni TXT originales a este repositorio público.

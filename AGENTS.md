@@ -77,7 +77,7 @@ Default section order:
 ## User Preferences
 
 - Use GitHub Actions for manual initiation from Android and GitHub Pages for static quote hosting, with the PC off. No schedules or external activation during local preparation; explain publication contents and destination before publishing.
-- The user supplied GitHub username `PaoloNB56`. Do not assume an authenticated session, repository or verified deployment exists. The proposed repository name is `cotizaciones-pp`.
+- The user explicitly authorized the public repository `PaoloNB56/cotizaciones-pp`. It is installed with Pages source `GitHub Actions`; public quotes use `https://paolonb56.github.io/cotizaciones-pp/`. Verify session and run state before remote changes.
 - pCloud and Termux are no longer selected. Retain previous local files without using them in the GitHub workflow or installation package.
 - FCI source TXT are generated manually from Balanz. Never scrape or automate requests to Balanz. Convert on the PC with the existing converter and manually upload only quote JSON. No mobile/browser converter is wanted.
 - Include S30N6 with all available QuickTrade history and the existing close / 1000 conversion. Preserve source files and historical series; do not refresh unrelated outputs for narrow changes.
@@ -119,7 +119,7 @@ Default section order:
 - For a full local provider/staging check use python -B -u github_feed.py stage --local --work .cloud-work/<new-run-name>. This downloads and stages without publishing, touching original feeds or starting HTTP. Existing work directories must be rejected.
 - Narrow instrument additions use only the relevant existing download/conversion functions; verify ticker/ID, nonempty ordered unique dates, finite closes and JSON round-trip. Do not run the BAT/main downloader for validation.
 - Compare original data with baseline.sha256.json when present. Build the GitHub bundle with python -B package_github.py and check its explicit entries, hashes and ZIP integrity.
-- Keep actual GitHub Linux execution, Pages initial/repeated publication and cache behavior, and PP desktop/mobile consumption separately marked as pending until tested.
+- GitHub Linux validation, initial Pages publication and a normal update passed on 2026-09-11 (Actions runs 34663922757, 34663988467 and 34664059981). Both public manifests and all 17 series matched saved history; unchanged URLs served a new generation and probe, dates were preserved and the second history commit retained its parent. Actual rollback and PP desktop/mobile consumption remain untested.
 
 ## Child DOX Index
 
