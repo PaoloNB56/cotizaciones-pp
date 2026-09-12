@@ -4,8 +4,8 @@
     "BCAHA.json": "11bb014708760e528781fb486b0a539442cc573387d63c113e837116baf36cfd"
   },
   "publication": {
-    "generation": "cef025b9980c4e7ba17167bf27aaf2eb",
-    "generated_utc": "2026-09-12T18:06:49.379665+00:00",
+    "generation": "aed1d52b8151433ebce4bf3e78402bc3",
+    "generated_utc": "2026-09-12T18:24:34.780269+00:00",
     "files": [
       {
         "file": "AL35.json",
@@ -78,7 +78,7 @@
         "source": "AVISO: actualización fallida; último histórico válido conservado",
         "sha256": "e8e78315dd31f89ec3a1a6b9ce70dfbc0ba1399595c0d015b5b0a61047d6ee1d",
         "outcome": "retained_after_error",
-        "error": "CCL: faltan 1 fechas del histórico previo; se cancela el lote."
+        "error": "CCL: faltan 1 fechas del histórico previo; se rechaza la actualización de esta serie."
       },
       {
         "file": "MEP.json",
@@ -88,7 +88,7 @@
         "source": "AVISO: actualización fallida; último histórico válido conservado",
         "sha256": "86dc164084ebdc3de7cc4f7573974bf922b534c85637f867451979100bb8a6ca",
         "outcome": "retained_after_error",
-        "error": "MEP: faltan 1 fechas del histórico previo; se cancela el lote."
+        "error": "MEP: faltan 1 fechas del histórico previo; se rechaza la actualización de esta serie."
       },
       {
         "file": "T13F6.json",
@@ -167,7 +167,7 @@
   "probe": [
     {
       "date": "2026-09-12",
-      "close": 799885422
+      "close": 167144310
     }
   ]
 }
