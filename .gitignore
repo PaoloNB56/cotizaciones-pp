@@ -1,0 +1,22 @@
+# Only reviewed code and quote seeds should be committed. Never git add -f secrets.
+__pycache__/
+*.pyc
+.cloud-work/*
+!.cloud-work/AGENTS.md
+.venv/
+.env
+.env.*
+*secret*
+*credential*
+*.portfolio
+*.xml
+*.xlsx
+*.txt
+*.hash
+.work/
+.agents/
+.codex/
+baseline.sha256.json
+pp-feed-android.zip
+pp-feed-github.zip
+pp-feed-github.zip.tmp
