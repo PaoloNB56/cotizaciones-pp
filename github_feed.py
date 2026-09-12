@@ -142,7 +142,9 @@ def validate_history(files):
 
 
 def safe_failure(exc):
-    return str(exc) if isinstance(exc, core.FeedError) else f"Error {type(exc).__name__}; revisar el proveedor o la entrada."
+    if isinstance(exc, core.FeedError):
+        return str(exc).replace("se cancela el lote.", "se rechaza la actualización de esta serie.")
+    return f"Error {type(exc).__name__}; revisar el proveedor o la entrada."
 
 
 def apply_fci(previous, applied, directory, failures=None):
