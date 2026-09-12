@@ -19,6 +19,7 @@
 
 - Main UI name is `Actualizar cotizaciones`; default mode is `Actualizar`. `Inicializar` is for first publication and `Validar` does not deploy.
 - Preserve whole-workflow concurrency and the ordering prepare, deploy, verify, commit.
+- Use reviewed stable action versions declaring Node.js 24; inspect nested actions in composite wrappers too. Do not suppress runtime deprecation by allowing an insecure Node version. The Python quote runtime remains 3.12.
 
 # Verification
 
