@@ -28,10 +28,10 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements-cloud.in
@@ -54,22 +54,22 @@ jobs:
       - name: Configurar Pages
         if: inputs.mode != 'Validar'
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6.0.0
       - name: Guardar publicación anterior para recuperación
         if: inputs.mode != 'Validar' && steps.stage.outputs.has_previous == 'true'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5.0.0
         with:
           name: previous-pages
           path: .cloud-work/pages/previous-site
       - name: Preparar nueva publicación
         if: inputs.mode != 'Validar'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: .cloud-work/pages/site
       - name: Publicar JSON en Pages
         if: inputs.mode != 'Validar'
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5.0.1
       - name: Comprobar todas las URL públicas
         if: inputs.mode != 'Validar'
         id: verify
@@ -85,7 +85,7 @@ jobs:
       - name: Restaurar publicación anterior si falló
         if: failure() && (steps.deploy.outcome == 'success' || steps.deploy.outcome == 'failure') && steps.stage.outputs.has_previous == 'true'
         id: restore
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5.0.1
         with:
           artifact_name: previous-pages
       - name: Comprobar restauración
@@ -95,7 +95,7 @@ jobs:
         run: python -B -u github_feed.py verify-previous --work .cloud-work/pages
       - name: Guardar informes del intento
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: cotizaciones-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
