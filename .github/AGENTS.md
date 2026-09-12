@@ -13,6 +13,7 @@
 - Use the ephemeral GITHUB_TOKEN; no pCloud credentials or user-generated token is needed.
 - Deploy only the explicit staged site. Store history on `feed-history` only after public verification; never force-push it.
 - Stage a previous-site artifact for attempted rollback. A failed/uncertain deployment or history commit must stay red even after recovery. Initial publication has no previous site to restore.
+- Per-series source or recognized FCI validation failures may produce a complete valid mixed batch: publish it green with warnings and list retained series. Do not use workflow-level continue-on-error; global history, deployment, verification and persistence failures still stop the run or trigger recovery.
 - A GitHub-hosted run and Pages propagation must be tested live before claiming end-to-end success.
 
 # Work Guidance
