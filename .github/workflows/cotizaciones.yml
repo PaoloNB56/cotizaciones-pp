@@ -1,0 +1,107 @@
+name: Actualizar cotizaciones
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Actualizar normalmente; Inicializar sólo la primera vez; Validar sin publicar'
+        type: choice
+        default: Actualizar
+        options:
+          - Actualizar
+          - Inicializar
+          - Validar
+permissions:
+  contents: read
+concurrency:
+  group: pp-feed-pages
+  cancel-in-progress: false
+jobs:
+  quotes:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-cloud.in
+      - name: Pruebas offline
+        run: python -B -m unittest -v -b test_cloud_feed test_github_feed
+      - name: Preparar y validar
+        id: stage
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MODE: ${{ inputs.mode }}
+        shell: bash
+        run: |
+          if [[ "$MODE" == "Inicializar" ]]; then
+            python -B -u github_feed.py stage --initialize --work .cloud-work/pages
+          elif [[ "$MODE" == "Validar" ]]; then
+            python -B -u github_feed.py stage --initialize --work .cloud-work/pages
+          else
+            python -B -u github_feed.py stage --work .cloud-work/pages
+          fi
+      - name: Configurar Pages
+        if: inputs.mode != 'Validar'
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Guardar publicación anterior para recuperación
+        if: inputs.mode != 'Validar' && steps.stage.outputs.has_previous == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          name: previous-pages
+          path: .cloud-work/pages/previous-site
+      - name: Preparar nueva publicación
+        if: inputs.mode != 'Validar'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .cloud-work/pages/site
+      - name: Publicar JSON en Pages
+        if: inputs.mode != 'Validar'
+        id: deploy
+        uses: actions/deploy-pages@v4
+      - name: Comprobar todas las URL públicas
+        if: inputs.mode != 'Validar'
+        id: verify
+        env:
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: python -B -u github_feed.py verify --work .cloud-work/pages
+      - name: Conservar histórico confirmado
+        if: inputs.mode != 'Validar'
+        id: persist
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -B -u github_feed.py commit --work .cloud-work/pages
+      - name: Restaurar publicación anterior si falló
+        if: failure() && (steps.deploy.outcome == 'success' || steps.deploy.outcome == 'failure') && steps.stage.outputs.has_previous == 'true'
+        id: restore
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: previous-pages
+      - name: Comprobar restauración
+        if: failure() && steps.restore.outcome == 'success'
+        env:
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: python -B -u github_feed.py verify-previous --work .cloud-work/pages
+      - name: Guardar informes del intento
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cotizaciones-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .cloud-work/pages/run.json
+            .cloud-work/pages/verified.json
+            .cloud-work/pages/site/publication.json
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
