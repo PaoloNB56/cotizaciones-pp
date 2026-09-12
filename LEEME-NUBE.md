@@ -6,7 +6,7 @@ El repositorio público [PaoloNB56/cotizaciones-pp](https://github.com/PaoloNB56
 
 1. Desde el navegador del celular, abrir [Actions → Actualizar cotizaciones](https://github.com/PaoloNB56/cotizaciones-pp/actions/workflows/cotizaciones.yml).
 2. Pulsar **Run workflow**, dejar la rama principal y el modo **Actualizar**, y confirmar.
-3. Esperar que finalice correctamente. El resumen debe indicar **published_verified**, con últimas fechas por instrumento.
+3. Esperar que finalice correctamente. El resumen debe indicar **published_verified**, con últimas fechas por instrumento. Si dice **PUBLICACIÓN CON AVISOS**, las series indicadas conservaron su histórico anterior; las demás válidas se publicaron. Verde no significa que todos los proveedores aportaron datos nuevos.
 4. Abrir PP y actualizar las cotizaciones históricas. La PC puede estar apagada.
 
 Guardar la página de Actions como favorito o acceso directo del navegador. La app de GitHub no es requisito. No hay horarios ni ejecución automática al subir archivos.
@@ -35,7 +35,7 @@ Se mantiene tu procedimiento manual con Balanz. El proyecto no hace scraping ni 
 3. Abrir **entradas-fci** en GitHub → **Add file → Upload files**; subir los JSON y confirmar el cambio en la rama principal. Si se crea una propuesta en otra rama, incorporarla a la principal antes de actualizar.
 4. Ejecutar **Actualizar cotizaciones**, modo **Actualizar**.
 
-No hace falta subir los tres fondos juntos. Los ausentes conservan su histórico. Una carga con sólo algunas fechas se combina con las anteriores; en fechas coincidentes, el archivo nuevo reemplaza el cierre anterior. Los archivos vacíos, desordenados, duplicados o inválidos se rechazan. No existe un conversor web/móvil porque no fue solicitado. [Carga de archivos en GitHub](https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository).
+No hace falta subir los tres fondos juntos. Los ausentes conservan su histórico. Una carga con sólo algunas fechas se combina con las anteriores; en fechas coincidentes, el archivo nuevo reemplaza el cierre anterior. Los archivos vacíos, desordenados, duplicados o inválidos se rechazan para ese fondo: se conserva su histórico y se avisa, sin bloquear otras series válidas. El archivo rechazado no se marca como incorporado; corregirlo y ejecutar de nuevo. No existe un conversor web/móvil porque no fue solicitado. [Carga de archivos en GitHub](https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository).
 
 No subir TXT originales, capturas, datos de cuenta ni cartera a `entradas-fci`. No editar `feed-history` ni las semillas `FCI/` para una actualización cotidiana. Borrar una entrada manual no borra precios publicados; tampoco revierte una corrección ya incorporada.
 
@@ -52,7 +52,7 @@ T13F6.json T15D5.json T30J6.json TTJ26.json TTM26.json
 BCACCA.json BCAHA.json BCMMA.json
 ```
 
-También se publican `publication.json` (generación, fechas, recuentos y hashes del lote) y `_pp_feed_probe.json` (cotización ficticia para comprobar sobrescritura). No importar la prueba como instrumento real en PP. No hay página de conversión ni datos de cartera.
+También se publican `publication.json` (generación, fechas, recuentos, hashes y resultado de cada serie; también el motivo cuando se conserva por error) y `_pp_feed_probe.json` (cotización ficticia para comprobar sobrescritura). No importar la prueba como instrumento real en PP. No hay página de conversión ni datos de cartera.
 
 Los FCI publicados se aplanan: `FCI/BCACCA.json` local corresponde a `BASE/BCACCA.json`. Se conserva el formato `[ {"date": "AAAA-MM-DD", "close": número} ]`.
 
@@ -80,13 +80,14 @@ La prueba final será actualizar desde el celular con la PC apagada, verificar �
 - Cada ejecución recupera un snapshot completo de `feed-history`, fijado a un commit. No depende del disco temporal del runner ni de la caché de Pages. Si falta historia, `Actualizar` exige inicialización explícita; si está corrupta o incompleta, falla.
 - Los históricos locales iniciales quedan intactos. QuickTrade debe conservar todas las fechas conocidas de su rango. Dolarazo preserva el histórico y revisa un solapamiento de siete días para admitir correcciones del día actual.
 - Los FCI no se descargan. Se validan las cargas manuales, se combinan por fecha y se registra su hash para no reaplicar indefinidamente un archivo antiguo.
-- Se valida todo antes de crear el sitio desplegable. Error de proveedor o entrada FCI impide la publicación; las URL siguen sirviendo el lote anterior.
+- Si falla un proveedor o un JSON FCI reconocido, se conserva la última serie válida del histórico y se publican las otras actualizaciones válidas. No se inventan precios ni fechas para completar huecos. Si fallan todas las actualizaciones intentadas y tampoco hay una carga manual nueva válida, no se publica. Un histórico corrupto o incompleto, un archivo inesperado o una estructura insegura de entradas siguen interrumpiendo la preparación completa.
+- Se valida el lote completo antes de crear el sitio desplegable, incluidas las series conservadas. Una publicación parcial correcta termina verde con avisos; el resumen identifica las series pendientes y sus motivos.
 - Pages recibe un lote completo. Se comprueba `publication.json`, la prueba ficticia y las 17 URL exactas sin query strings. Se reintenta la lectura durante al menos un minuto más los tiempos de red; la caché propia de PP o de otros puntos de distribución requiere comprobación aparte.
 - Sólo después de comprobar la publicación se guarda el nuevo histórico, manteniendo los commits anteriores y sin forzar la rama. Si falla despliegue, verificación o persistencia, el workflow intenta volver a desplegar el sitio confirmado anterior y verificarlo. El intento fallido sigue rojo aunque la restauración funcione.
 - La primera publicación no tiene sitio anterior para restaurar. Tampoco se garantiza recuperación después de cancelar el workflow, agotar su tiempo o perder acceso a GitHub. Pages y la rama histórica no forman una transacción única; una escritura con respuesta incierta puede necesitar revisar ambos historiales.
 - No ejecutar otros publicadores ni modificar manualmente `feed-history`. El workflow serializa ejecuciones y no cancela automáticamente una publicación en curso.
 
-Si una ejecución aparece roja, leer el primer paso fallido y el resumen. No asumir que se publicaron precios nuevos. `run.json` empieza como `validated_not_published` y sólo termina en `published_verified` cuando publicación y persistencia están confirmadas. Los artifacts de informes se conservan siete días. El histórico Git permanece en su rama.
+Si una ejecución aparece roja, leer el primer paso fallido y el resumen. No asumir que se publicaron precios nuevos. `run.json` empieza como `validated_not_published` y sólo termina en `published_verified` cuando publicación y persistencia están confirmadas, incluso si alguna serie conservó sus valores anteriores. Revisar `warnings` en `run.json` y los resultados de `publication.json`: `refreshed` indica una actualización válida, aunque los valores no hayan cambiado; `retained` indica una serie sin actualización prevista o una carga ya incorporada; `retained_after_error` indica que falló su actualización. Las fechas de cada serie reflejan los datos reales conservados. Los artifacts de informes se conservan siete días. El histórico Git permanece en su rama.
 
 Las validaciones detectan estructura inválida, fechas perdidas conocidas y huecos nuevos de Dolarazo; no certifican por sí solas la veracidad económica de cada precio del proveedor.
 

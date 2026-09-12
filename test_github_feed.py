@@ -78,7 +78,9 @@ class StagingTests(unittest.TestCase):
         self.incoming = self.root / "incoming"
         self.incoming.mkdir()
         self.seeds = {n: OLD for n in c.SEEDS}
-        for name, value in [("local_seeds", lambda: copy.deepcopy(self.seeds)), ("build", lambda x: copy.deepcopy(x))]:
+        for name, value in [("local_seeds", lambda: copy.deepcopy(self.seeds)),
+                            ("quicktrade", lambda symbol, old, today: copy.deepcopy(old)),
+                            ("dollars", lambda symbol, old, today: copy.deepcopy(old))]:
             mock = patch.object(c, name, value)
             mock.start()
             self.addCleanup(mock.stop)
@@ -121,17 +123,111 @@ class StagingTests(unittest.TestCase):
         self.assertFalse((self.root / "one/site").exists())
         self.make(client=Client(), initialize=True)
 
-    def test_bad_manual_input_prevents_deployable_site(self):
+    def test_bad_manual_input_preserves_fund_and_other_valid_upload(self):
         (self.incoming / "BCMMA.json").write_text("[]")
-        with self.assertRaises(c.FeedError):
-            self.make()
-        self.assertFalse((self.root / "one/site").exists())
+        (self.incoming / "BCAHA.json").write_bytes(c.encode(NEW))
+        path, files = self.make()
+        state = g.validate_history(files)
+        self.assertEqual(c.decode(files["BCMMA.json"], "FCI"), OLD)
+        self.assertEqual(c.decode(files["BCAHA.json"], "FCI"), NEW)
+        self.assertNotIn("BCMMA.json", state["applied_fci"])
+        self.assertIn("BCMMA.json", json.loads((path / "run.json").read_text())["warnings"])
 
-    def test_provider_failure_prevents_deployable_site(self):
-        with patch.object(c, "build", side_effect=c.FeedError("provider failure")):
-            with self.assertRaises(c.FeedError):
+    def test_all_refreshes_fail_prevents_deployable_site(self):
+        with patch.object(c, "quicktrade", side_effect=c.FeedError("provider failure")), \
+             patch.object(c, "dollars", side_effect=c.FeedError("provider failure")):
+            with self.assertRaisesRegex(c.FeedError, "Ninguna serie"):
                 self.make()
         self.assertFalse((self.root / "one/site").exists())
+
+    def test_ccl_failure_does_not_block_mep_bonds_or_fci(self):
+        def dollars(symbol, old, today):
+            if symbol == "CCL":
+                old.clear()  # A failing provider cannot mutate fallback history.
+                raise c.FeedError("fecha ausente")
+            return NEW
+        (self.incoming / "BCAHA.json").write_bytes(c.encode(NEW))
+        with patch.object(c, "dollars", side_effect=dollars), patch.object(c, "quicktrade", return_value=NEW):
+            path, files = self.make()
+        self.assertEqual(c.decode(files["CCL.json"], "CCL"), OLD)
+        for name in ["MEP.json", "S30N6.json", "BCAHA.json"]:
+            self.assertEqual(c.decode(files[name], name), NEW)
+        state = g.validate_history(files)
+        report = next(r for r in state['publication']['files'] if r['file'] == 'CCL.json')
+        self.assertEqual(report['outcome'], 'retained_after_error')
+        self.assertEqual(report['last'], OLD[-1]['date'])
+        self.assertEqual(report['error'], 'fecha ausente')
+        self.assertEqual(set(g.read_site(path / 'site')), g.SITE_NAMES)
+
+    def test_truncated_series_falls_back_and_unexpected_error_is_sanitized(self):
+        self.seeds['AL35.json'] = NEW
+        def quote(symbol, old, today):
+            if symbol == 'AL35':
+                return OLD
+            if symbol == 'AE38':
+                raise requests.RequestException('private-token')
+            return NEW
+        with patch.object(c, 'quicktrade', side_effect=quote):
+            path, files = self.make()
+        self.assertEqual(c.decode(files['AL35.json'], 'AL35'), NEW)
+        self.assertEqual(c.decode(files['AE38.json'], 'AE38'), OLD)
+        report = (path / 'run.json').read_text()
+        self.assertNotIn('private-token', report)
+        self.assertIn('RequestException', report)
+
+    def test_invalid_upload_keeps_old_marker_and_retries_when_corrected(self):
+        upload = self.incoming / 'BCACCA.json'
+        upload.write_bytes(c.encode(NEW))
+        _, old_files = self.make()
+        class Client:
+            def load(self):
+                return 'a' * 40, old_files
+        upload.write_text('[]')
+        _, files = self.make('two', Client())
+        state = g.validate_history(files)
+        self.assertEqual(state['applied_fci'], g.validate_history(old_files)['applied_fci'])
+        self.assertEqual(c.decode(files['BCACCA.json'], 'FCI'), NEW)
+        upload.write_bytes(c.encode(NEW + [{'date': '2026-09-03', 'close': 3}]))
+        _, repaired = self.make('three', Client())
+        self.assertEqual(len(c.decode(repaired['BCACCA.json'], 'FCI')), 3)
+        self.assertNotEqual(g.validate_history(repaired)['applied_fci'], state['applied_fci'])
+
+    def test_corrupt_remote_history_still_aborts_everything(self):
+        _, files = self.make()
+        files['CCL.json'] = b'[]'
+        class Client:
+            def load(self):
+                return 'a' * 40, files
+        with self.assertRaises(c.FeedError):
+            self.make('two', Client())
+        self.assertFalse((self.root / 'two/site').exists())
+
+    def test_mixed_batch_commits_only_after_public_verification(self):
+        _, saved = self.make()
+        class Client:
+            committed = None
+            def load(self):
+                return 'a' * 40, saved
+            def commit(self, files, head):
+                self.committed = files
+                return 'b' * 40
+        client = Client()
+        def dollars(symbol, old, today):
+            if symbol == 'CCL': raise c.FeedError('missing date')
+            return NEW
+        with patch.object(c, 'dollars', side_effect=dollars):
+            path, files = self.make('two', client)
+        with self.assertRaises(c.FeedError): g.commit_history(path, client)
+        self.assertIsNone(client.committed)
+        run = json.loads((path / 'run.json').read_text())
+        site = g.read_site(path / 'site')
+        with patch.object(c, 'download_bytes', side_effect=lambda url: (site[url.rsplit('/', 1)[1]], {})):
+            g.verify_site(path / 'site', 'https://user.github.io/quotes', attempts=1)
+        (path / 'verified.json').write_bytes(g.json_bytes({'generation': run['generation']}))
+        g.commit_history(path, client)
+        self.assertEqual(client.committed['CCL.json'], saved['CCL.json'])
+        self.assertEqual(c.decode(client.committed['MEP.json'], 'MEP'), NEW)
+        self.assertEqual(json.loads((path / 'run.json').read_text())['status'], 'published_verified')
 
     def test_previous_work_is_not_reused(self):
         self.make()

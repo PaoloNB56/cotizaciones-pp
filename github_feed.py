@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import copy
 from datetime import datetime, timezone
 import json
 import os
@@ -140,7 +141,11 @@ def validate_history(files):
     return state
 
 
-def apply_fci(previous, applied, directory):
+def safe_failure(exc):
+    return str(exc) if isinstance(exc, core.FeedError) else f"Error {type(exc).__name__}; revisar el proveedor o la entrada."
+
+
+def apply_fci(previous, applied, directory, failures=None):
     result, updated, notices = dict(previous), dict(applied), {}
     directory = Path(directory)
     if not directory.is_dir():
@@ -150,16 +155,48 @@ def apply_fci(previous, applied, directory):
             continue
         if path.name not in FCI_NAMES or not path.is_file() or path.is_symlink():
             raise core.FeedError("entradas-fci admite sólo BCACCA.json, BCAHA.json y BCMMA.json; no subir TXT ni otros archivos.")
-        rows = core.decode(path.read_bytes(), path.name)
-        fingerprint = core.digest(core.encode(rows))
-        if applied.get(path.name) == fingerprint:
-            notices[path.name] = "carga ya incorporada; histórico conservado"
+        try:
+            rows = core.decode(path.read_bytes(), path.name)
+            fingerprint = core.digest(core.encode(rows))
+            if applied.get(path.name) == fingerprint:
+                notices[path.name] = "carga ya incorporada; histórico conservado"
+                continue
+            merged = core.merge(previous[path.name], rows)
+            core.validate(merged, path.name)
+            core.require_coverage(previous[path.name], merged, path.name)
+        except Exception as exc:
+            if failures is None:
+                raise
+            failures[path.name] = safe_failure(exc)
             continue
-        result[path.name] = core.merge(previous[path.name], rows)
-        core.require_coverage(previous[path.name], result[path.name], path.name)
+        result[path.name] = merged
         updated[path.name] = fingerprint
         notices[path.name] = "carga manual incorporada; se preservaron fechas anteriores"
     return result, updated, notices
+
+
+def refresh_series(previous, failures):
+    """Isolate provider failures; fallback is always the validated prior series."""
+    result, refreshed = dict(previous), set()
+    sources = [(core.legacy.INSTRUMENTOS_QT, core.quicktrade),
+               (core.legacy.DOLARAZO_DOLARES_CONFIG, core.dollars)]
+    for config, _ in sources:
+        if any(f"{symbol}.json" not in core.SEEDS for symbol in config):
+            raise core.FeedError("Instrumento nuevo: actualizar la lista explícita de publicación primero.")
+    today = core.TODAY()
+    for config, fetch in sources:
+        for symbol in config:
+            name = f"{symbol}.json"
+            try:
+                rows = fetch(symbol, copy.deepcopy(previous[name]), today)
+                core.validate(rows, name, today)
+                core.require_coverage(previous[name], rows, name)
+            except Exception as exc:
+                failures[name] = safe_failure(exc)
+                continue
+            result[name] = rows
+            refreshed.add(name)
+    return result, refreshed
 
 
 def site_from_history(files):
@@ -191,17 +228,27 @@ def prepare(work, incoming, client=None, initialize=False):
         for name in core.SEEDS:
             core.require_coverage(seeds[name], previous[name], name)
         applied = old_state["applied_fci"]
-    # Validate manual data first. Failure must not produce a deployable directory.
-    candidates, applied, notices = apply_fci(previous, applied, incoming)
-    candidates = core.build(candidates)
+    # The previous snapshot was validated globally; only individual refreshes may fail.
+    failures = {}
+    candidates, applied, notices = apply_fci(previous, applied, incoming, failures)
+    candidates, refreshed = refresh_series(candidates, failures)
+    refreshed.update(name for name, notice in notices.items() if notice.startswith("carga manual incorporada"))
+    if failures and not refreshed:
+        raise core.FeedError("Ninguna serie pudo actualizarse; se conserva la publicación anterior. " +
+                             "; ".join(f"{name}: {reason}" for name, reason in sorted(failures.items())))
     reports = []
     for name in core.SEEDS:
         rows = core.validate(candidates[name], name)
         core.require_coverage(previous[name], rows, name)
         source = notices.get(name, "FCI conservado sin nueva carga" if name in FCI_NAMES else
             ("descargado" if name[:-5] in core.legacy.INSTRUMENTOS_QT or name[:-5] in core.legacy.DOLARAZO_DOLARES_CONFIG else "histórico conservado"))
-        reports.append({"file": name, "count": len(rows), "first": rows[0]["date"], "last": rows[-1]["date"],
-                        "source": source, "sha256": core.digest(core.encode(rows))})
+        report = {"file": name, "count": len(rows), "first": rows[0]["date"], "last": rows[-1]["date"],
+                  "source": source, "sha256": core.digest(core.encode(rows)),
+                  "outcome": "refreshed" if name in refreshed else "retained"}
+        if name in failures:
+            report.update(source="AVISO: actualización fallida; último histórico válido conservado",
+                          outcome="retained_after_error", error=failures[name])
+        reports.append(report)
     publication = {"generation": uuid.uuid4().hex, "generated_utc": datetime.now(timezone.utc).isoformat(), "files": reports}
     state = {"version": 1, "applied_fci": applied, "publication": publication,
              "probe": [{"date": core.TODAY().isoformat(), "close": uuid.uuid4().int % 1_000_000_000 + 1}]}
@@ -212,10 +259,16 @@ def prepare(work, incoming, client=None, initialize=False):
     if old_files is not None:
         write_files(work / "previous-site", site_from_history(old_files))
     run = {"base_head": base_head, "local_only": client is None, "has_previous": old_files is not None,
-           "generation": publication["generation"], "status": "validated_not_published"}
+           "generation": publication["generation"], "status": "validated_not_published", "warnings": failures}
     (work / "run.json").write_bytes(json_bytes(run))
     summary("Lote validado; todavía no publicado.\n" + "\n".join(
-        f"- {r['file']}: {r['count']} precios; última fecha {r['last']}; {r['source']}" for r in reports))
+        f"- {r['file']}: {r['count']} precios; última fecha {r['last']}; {r['source']}" +
+        (f". Motivo: {r['error']}" if "error" in r else "") for r in reports))
+    for name, reason in sorted(failures.items()):
+        message = f"{name}: se conserva el histórico anterior. {reason}"
+        # Escape workflow command data, including unexpected multiline provider errors.
+        message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::warning title=Serie sin actualizar::{message}")
     if os.environ.get("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as stream:
             stream.write(f"has_previous={str(run['has_previous']).lower()}\n")
@@ -272,7 +325,13 @@ def commit_history(work, client):
     revision = client.commit(files, run["base_head"])
     run.update(status="published_verified", history_commit=revision)
     (work / "run.json").write_bytes(json_bytes(run))
-    summary("published_verified: publicación comprobada e histórico guardado. Ya se puede actualizar PP.")
+    pending = [r["file"] for r in validate_history(files)["publication"]["files"]
+               if r.get("outcome") == "retained_after_error"]
+    if pending:
+        summary("published_verified — PUBLICACIÓN CON AVISOS: las series válidas se publicaron y verificaron. "
+                "Conservan su histórico anterior por un error: " + ", ".join(pending) + ". Revisar sus motivos en el resumen de preparación.")
+    else:
+        summary("published_verified: publicación comprobada e histórico guardado. Ya se puede actualizar PP.")
 
 
 def summary(message):

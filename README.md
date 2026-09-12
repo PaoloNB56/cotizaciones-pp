@@ -5,6 +5,7 @@ Actualización manual desde el celular mediante **GitHub Actions**, con JSON pú
 - Bonos QuickTrade y MEP/CCL: descarga automática al pulsar **Actualizar cotizaciones**.
 - FCI: adquisición manual desde Balanz, conversión en la PC y carga de JSON en [entradas-fci](entradas-fci/README.md). No se hace scraping.
 - Conservación de históricos, validación completa antes de publicar y verificación de las URL.
+- Si falla una serie, conserva su última versión válida y se publican las demás. La ejecución queda verde con avisos que indican cuáles quedaron pendientes; revisar también las fechas del resumen.
 - Sin pCloud, Termux, token personal ni conversor web.
 
 **Actualizar desde el celular:** [abrir Actions](https://github.com/PaoloNB56/cotizaciones-pp/actions/workflows/cotizaciones.yml) → **Run workflow → Actualizar → Run workflow**.
