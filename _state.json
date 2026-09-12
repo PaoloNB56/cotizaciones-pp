@@ -1,9 +1,11 @@
 {
   "version": 1,
-  "applied_fci": {},
+  "applied_fci": {
+    "BCAHA.json": "11bb014708760e528781fb486b0a539442cc573387d63c113e837116baf36cfd"
+  },
   "publication": {
-    "generation": "b4915cb760a6408cbfd552e070f39256",
-    "generated_utc": "2026-09-12T01:11:49.321597+00:00",
+    "generation": "0135665d040746afb7d6b4037e87c950",
+    "generated_utc": "2026-09-12T17:48:15.731650+00:00",
     "files": [
       {
         "file": "AL35.json",
@@ -127,11 +129,11 @@
       },
       {
         "file": "BCAHA.json",
-        "count": 3318,
+        "count": 3323,
         "first": "2013-01-04",
-        "last": "2026-09-04",
-        "source": "FCI conservado sin nueva carga",
-        "sha256": "3955a4ca972d7060ca2d48ba845eaa9d28089f2bd7da029606f16f074352f125"
+        "last": "2026-09-11",
+        "source": "carga manual incorporada; se preservaron fechas anteriores",
+        "sha256": "11bb014708760e528781fb486b0a539442cc573387d63c113e837116baf36cfd"
       },
       {
         "file": "BCMMA.json",
@@ -145,8 +147,8 @@
   },
   "probe": [
     {
-      "date": "2026-09-11",
-      "close": 172643253
+      "date": "2026-09-12",
+      "close": 217992712
     }
   ]
 }
