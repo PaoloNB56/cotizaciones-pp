@@ -4,8 +4,8 @@
     "BCAHA.json": "11bb014708760e528781fb486b0a539442cc573387d63c113e837116baf36cfd"
   },
   "publication": {
-    "generation": "aed1d52b8151433ebce4bf3e78402bc3",
-    "generated_utc": "2026-09-12T18:24:34.780269+00:00",
+    "generation": "696acafd9ccf465490024a4d5088ae22",
+    "generated_utc": "2026-09-13T12:34:16.391544+00:00",
     "files": [
       {
         "file": "AL35.json",
@@ -166,8 +166,8 @@
   },
   "probe": [
     {
-      "date": "2026-09-12",
-      "close": 167144310
+      "date": "2026-09-13",
+      "close": 402321851
     }
   ]
 }
