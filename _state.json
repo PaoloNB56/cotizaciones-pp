@@ -4,61 +4,61 @@
     "BCAHA.json": "11bb014708760e528781fb486b0a539442cc573387d63c113e837116baf36cfd"
   },
   "publication": {
-    "generation": "696acafd9ccf465490024a4d5088ae22",
-    "generated_utc": "2026-09-13T12:34:16.391544+00:00",
+    "generation": "2da955dc86b645abba1022969b6c904c",
+    "generated_utc": "2026-09-14T19:46:34.398730+00:00",
     "files": [
       {
         "file": "AL35.json",
-        "count": 434,
+        "count": 435,
         "first": "2024-12-02",
-        "last": "2026-09-11",
+        "last": "2026-09-14",
         "source": "descargado",
-        "sha256": "b8f09627477f46ce6e0bca02ccfd37bdee817f19b912bdf9ec3f5f5e4cd806ba",
+        "sha256": "aafbdbf9ab4ae9f71e74a6da00c971698aad96a1f668e9ac20b6db14da153094",
         "outcome": "refreshed"
       },
       {
         "file": "AE38.json",
-        "count": 434,
+        "count": 435,
         "first": "2024-12-02",
-        "last": "2026-09-11",
+        "last": "2026-09-14",
         "source": "descargado",
-        "sha256": "9de2665aef58c1f5d2779f4e03fa284000fadfe06e4c4570b55afd477311c2b7",
+        "sha256": "3026a4fe0a2d3a97da9791bfc6a6fce865b744f0a67b22d71fc95729ef5d7aa4",
         "outcome": "refreshed"
       },
       {
         "file": "AL41.json",
-        "count": 434,
+        "count": 435,
         "first": "2024-12-02",
-        "last": "2026-09-11",
+        "last": "2026-09-14",
         "source": "descargado",
-        "sha256": "bd3b37982827ad7c60e0acb5c9f2d72a57330c436edfc03997016f2ee901ff5c",
+        "sha256": "b310acc48bbc4a41a3b131edd8114a8b359dfe50096416d97d7662cde5f29a51",
         "outcome": "refreshed"
       },
       {
         "file": "AN29.json",
-        "count": 182,
+        "count": 183,
         "first": "2025-12-15",
-        "last": "2026-09-11",
+        "last": "2026-09-14",
         "source": "descargado",
-        "sha256": "a00020336a854e9ecf812e4c2eca5b0cec34845864657d799171757a552a4650",
+        "sha256": "9527a9a7c99a3475c9a4ef636858f9f0808f9ce91de5a60865ffd35879d72603",
         "outcome": "refreshed"
       },
       {
         "file": "AO28.json",
-        "count": 111,
+        "count": 112,
         "first": "2026-04-01",
-        "last": "2026-09-11",
+        "last": "2026-09-14",
         "source": "descargado",
-        "sha256": "d10df4cad6b55b256f84a452234eeda8c0d37bf6421deca9e3a420119a6e65ed",
+        "sha256": "e41b716d239676c77a1931e9b452b4a75e054abfd8ac9d509a7bd3782bd2a8f4",
         "outcome": "refreshed"
       },
       {
         "file": "S30N6.json",
-        "count": 181,
+        "count": 182,
         "first": "2025-12-16",
-        "last": "2026-09-11",
+        "last": "2026-09-14",
         "source": "descargado",
-        "sha256": "e16dfdec7dfbca25aa8fe78ffa4a65881219a1eaea34e6cc1f8fa566141141f4",
+        "sha256": "8cc57edeb5475ebc02a631c167d2c1493e4361357025abd4318dc7a2bc318a49",
         "outcome": "refreshed"
       },
       {
@@ -72,23 +72,21 @@
       },
       {
         "file": "CCL.json",
-        "count": 667,
+        "count": 668,
         "first": "2024-01-02",
-        "last": "2026-09-11",
-        "source": "AVISO: actualización fallida; último histórico válido conservado",
-        "sha256": "e8e78315dd31f89ec3a1a6b9ce70dfbc0ba1399595c0d015b5b0a61047d6ee1d",
-        "outcome": "retained_after_error",
-        "error": "CCL: faltan 1 fechas del histórico previo; se rechaza la actualización de esta serie."
+        "last": "2026-09-14",
+        "source": "descargado",
+        "sha256": "28e098274682e9cc6da298746e4641be58ba7778b147b80cc85ceb45622e2919",
+        "outcome": "refreshed"
       },
       {
         "file": "MEP.json",
-        "count": 670,
+        "count": 671,
         "first": "2024-01-02",
-        "last": "2026-09-11",
-        "source": "AVISO: actualización fallida; último histórico válido conservado",
-        "sha256": "86dc164084ebdc3de7cc4f7573974bf922b534c85637f867451979100bb8a6ca",
-        "outcome": "retained_after_error",
-        "error": "MEP: faltan 1 fechas del histórico previo; se rechaza la actualización de esta serie."
+        "last": "2026-09-14",
+        "source": "descargado",
+        "sha256": "1991a70630e7f23dba34fd41270ac913a57ff96d54e8df1da9f3f38df814f1a6",
+        "outcome": "refreshed"
       },
       {
         "file": "T13F6.json",
@@ -166,8 +164,8 @@
   },
   "probe": [
     {
-      "date": "2026-09-13",
-      "close": 402321851
+      "date": "2026-09-14",
+      "close": 660471931
     }
   ]
 }
