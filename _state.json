@@ -4,8 +4,8 @@
     "BCAHA.json": "424e857c90ceb06d8003d23a987a79a4180d02236afb043bde6713559910f771"
   },
   "publication": {
-    "generation": "93c13621759d4bc9beca2e4996b5edcb",
-    "generated_utc": "2026-09-18T21:03:30.235105+00:00",
+    "generation": "63ee23b76aa04cda998b3568a9064996",
+    "generated_utc": "2026-09-21T10:42:50.085148+00:00",
     "files": [
       {
         "file": "AL35.json",
@@ -72,20 +72,20 @@
       },
       {
         "file": "CCL.json",
-        "count": 672,
+        "count": 673,
         "first": "2024-01-02",
-        "last": "2026-09-18",
+        "last": "2026-09-21",
         "source": "descargado",
-        "sha256": "4e9b0269324076f7e40934f538245b37208a874c6e9e423bd533deeb76c47f39",
+        "sha256": "09e2741dcaf8c9f52f964782eb2efdd13e47ff602d2d746394c194fec38c9d0e",
         "outcome": "refreshed"
       },
       {
         "file": "MEP.json",
-        "count": 675,
+        "count": 676,
         "first": "2024-01-02",
-        "last": "2026-09-18",
+        "last": "2026-09-21",
         "source": "descargado",
-        "sha256": "68c85511fae7b148d26952c96c090eda205e479a51dd60189a22e15331d3db60",
+        "sha256": "dcb2b4b0e41def769e1434a425756d50e48ed727b5ca2bef6623626cca3063d1",
         "outcome": "refreshed"
       },
       {
@@ -147,9 +147,9 @@
         "count": 3327,
         "first": "2013-01-04",
         "last": "2026-09-17",
-        "source": "carga manual incorporada; se preservaron fechas anteriores",
+        "source": "carga ya incorporada; histórico conservado",
         "sha256": "424e857c90ceb06d8003d23a987a79a4180d02236afb043bde6713559910f771",
-        "outcome": "refreshed"
+        "outcome": "retained"
       },
       {
         "file": "BCMMA.json",
@@ -164,8 +164,8 @@
   },
   "probe": [
     {
-      "date": "2026-09-18",
-      "close": 327448489
+      "date": "2026-09-21",
+      "close": 50193121
     }
   ]
 }
