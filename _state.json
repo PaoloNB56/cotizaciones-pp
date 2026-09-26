@@ -4,8 +4,8 @@
     "BCAHA.json": "6c1fb7a817cd3bd429f0c641c257fb53f895cd60df50e0980b5cff4aacc9d68b"
   },
   "publication": {
-    "generation": "5cb193b1c39c41ce901831c4c8aba8f7",
-    "generated_utc": "2026-09-25T16:38:26.421007+00:00",
+    "generation": "9178a9d509114d758242e2c27a3967d3",
+    "generated_utc": "2026-09-26T16:38:07.035423+00:00",
     "files": [
       {
         "file": "AL35.json",
@@ -13,7 +13,7 @@
         "first": "2024-12-02",
         "last": "2026-09-25",
         "source": "descargado",
-        "sha256": "181b11cff70339ad180f1ec4f4c947eaccc51ef1913813ceff982da5671469d2",
+        "sha256": "151dae2c209e254a4c367e4c21a1eceb52c15a2efa0b9708c0cb4c7acc31889e",
         "outcome": "refreshed"
       },
       {
@@ -22,7 +22,7 @@
         "first": "2024-12-02",
         "last": "2026-09-25",
         "source": "descargado",
-        "sha256": "63bea17900d2c6532652c7543ace8e00077d44f54ec96604e986503b528dcf31",
+        "sha256": "b143b62bbf0b921b7ee26a9728254334a44dc14ac7e414b5d5a06020c9adbd19",
         "outcome": "refreshed"
       },
       {
@@ -31,7 +31,7 @@
         "first": "2024-12-02",
         "last": "2026-09-25",
         "source": "descargado",
-        "sha256": "3f076ff35243ae32b8135f17576aa4e0123932563aaef05ec9edb4a984950f79",
+        "sha256": "96f9216192c65536f4678e3bc977c136d3e2d3786c6a467edeb2b1221fdbcc74",
         "outcome": "refreshed"
       },
       {
@@ -40,7 +40,7 @@
         "first": "2025-12-15",
         "last": "2026-09-25",
         "source": "descargado",
-        "sha256": "d9d846100cc26f250f6eab79a22d7a3a346341198e9c08f37126f5ab89f951f8",
+        "sha256": "ef3d379243fdad1f0f5b4720d8215e273d3e876bcbff2526a9ef2061a57dbdbc",
         "outcome": "refreshed"
       },
       {
@@ -49,7 +49,7 @@
         "first": "2026-04-01",
         "last": "2026-09-25",
         "source": "descargado",
-        "sha256": "5de88427d0c867bb22dc6b7c3e6540e7551b967941cb9b8e2e9e8bdee1800f83",
+        "sha256": "623d7bc39a61b4d90c9de604a756ee8e16be6f0655da6eb065a8b350c939c2b4",
         "outcome": "refreshed"
       },
       {
@@ -58,7 +58,7 @@
         "first": "2025-12-16",
         "last": "2026-09-25",
         "source": "descargado",
-        "sha256": "fa5664bbe3460ecbaf5bdcf40b988d833d9bc8114600e9bad685f5c44f50bc4d",
+        "sha256": "0b9d7ff2d9eaaee9b00a4fdc1ebb50ddb9f1de03ad0baf05b64d144e23109944",
         "outcome": "refreshed"
       },
       {
@@ -76,7 +76,7 @@
         "first": "2024-01-02",
         "last": "2026-09-25",
         "source": "descargado",
-        "sha256": "3b992a556c5fe9bd859af1aaac67a5c5e282c1156dd3dd6dbd383a035b006db7",
+        "sha256": "e1fb43cb02fe9eba9190d1f77ca6b4c558b35d9a49f7205b63e36e20c42e39fc",
         "outcome": "refreshed"
       },
       {
@@ -85,7 +85,7 @@
         "first": "2024-01-02",
         "last": "2026-09-25",
         "source": "descargado",
-        "sha256": "fa73ae98c9053116e963d718343bd76fc9b2d98e0428e126f6cde054191d7cf9",
+        "sha256": "2db08a34e648130f4c3488511ff4204114fc93dbd2ae129a29cc3a00602742b0",
         "outcome": "refreshed"
       },
       {
@@ -147,9 +147,9 @@
         "count": 3332,
         "first": "2013-01-04",
         "last": "2026-09-24",
-        "source": "carga manual incorporada; se preservaron fechas anteriores",
+        "source": "carga ya incorporada; histórico conservado",
         "sha256": "6c1fb7a817cd3bd429f0c641c257fb53f895cd60df50e0980b5cff4aacc9d68b",
-        "outcome": "refreshed"
+        "outcome": "retained"
       },
       {
         "file": "BCMMA.json",
@@ -164,8 +164,8 @@
   },
   "probe": [
     {
-      "date": "2026-09-25",
-      "close": 591297890
+      "date": "2026-09-26",
+      "close": 758989084
     }
   ]
 }
