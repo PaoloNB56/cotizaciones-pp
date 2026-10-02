@@ -52,6 +52,8 @@ T13F6.json T15D5.json T30J6.json TTJ26.json TTM26.json
 BCACCA.json BCAHA.json BCMMA.json
 ```
 
+Los bonos vencidos **X29Y6, T13F6, T15D5, T30J6, TTJ26 y TTM26** se conservan como históricos: ya no se descargan cotizaciones para ellos. Sus JSON y URL siguen disponibles y cada publicación conserva sus datos guardados.
+
 También se publican `publication.json` (generación, fechas, recuentos, hashes y resultado de cada serie; también el motivo cuando se conserva por error) y `_pp_feed_probe.json` (cotización ficticia para comprobar sobrescritura). No importar la prueba como instrumento real en PP. No hay página de conversión ni datos de cartera.
 
 Los FCI publicados se aplanan: `FCI/BCACCA.json` local corresponde a `BASE/BCACCA.json`. Se conserva el formato `[ {"date": "AAAA-MM-DD", "close": número} ]`.
