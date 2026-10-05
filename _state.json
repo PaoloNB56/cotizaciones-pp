@@ -4,61 +4,61 @@
     "BCAHA.json": "d2227887e59b2c74880f91361574ffe648a837472321264ccc7752d6a77334dd"
   },
   "publication": {
-    "generation": "727153c5b61849929087bff573a0d8d4",
-    "generated_utc": "2026-10-02T19:43:40.653037+00:00",
+    "generation": "1351aa3a44094a90a8b18b1cbcbc3722",
+    "generated_utc": "2026-10-05T21:32:48.314589+00:00",
     "files": [
       {
         "file": "AL35.json",
-        "count": 449,
+        "count": 450,
         "first": "2024-12-02",
-        "last": "2026-10-02",
+        "last": "2026-10-05",
         "source": "descargado",
-        "sha256": "32d455b2ba3aa5374b2be529b1b43fda6b9cc78f6735ceaf8e2ec269b9dcdc32",
+        "sha256": "853ce8c5442bca995862883e61b9c9b1f9c13cc9eb8583a887b390a306b05c7a",
         "outcome": "refreshed"
       },
       {
         "file": "AE38.json",
-        "count": 449,
+        "count": 450,
         "first": "2024-12-02",
-        "last": "2026-10-02",
+        "last": "2026-10-05",
         "source": "descargado",
-        "sha256": "3541407084910d435c6003113a5ae2efaccfd5add140ddda42835fff668b9dec",
+        "sha256": "b426c07767f55f2d51c8df9aba81fe74e83741fc93c992347c1e6a6d1bffc4b0",
         "outcome": "refreshed"
       },
       {
         "file": "AL41.json",
-        "count": 449,
+        "count": 450,
         "first": "2024-12-02",
-        "last": "2026-10-02",
+        "last": "2026-10-05",
         "source": "descargado",
-        "sha256": "d04770817991d3aba560bea81deaeab2e19c11880ceae524eb3f483abdff6acc",
+        "sha256": "3ba0f50a94cce1a263756841c180a555154347fad4418e48dc58c72db70e217b",
         "outcome": "refreshed"
       },
       {
         "file": "AN29.json",
-        "count": 197,
+        "count": 198,
         "first": "2025-12-15",
-        "last": "2026-10-02",
+        "last": "2026-10-05",
         "source": "descargado",
-        "sha256": "fdd6f29b4398ef5c6a247840370a2cd77ce1b1560972d8d30b5b14112fcc3c4b",
+        "sha256": "e3ee4ee1bddfbcbbee6151f13ebbf6e5559d087888600d6ee2d832aba734aa4c",
         "outcome": "refreshed"
       },
       {
         "file": "AO28.json",
-        "count": 126,
+        "count": 127,
         "first": "2026-04-01",
-        "last": "2026-10-02",
+        "last": "2026-10-05",
         "source": "descargado",
-        "sha256": "3e65489cc25c1740f91988b3b3d944a34aa3cdf654a892e5cacd621316c65083",
+        "sha256": "b0a31174beb04740fbefc4e57c4f48c37108f4d4b701957b927756b9c4bc979f",
         "outcome": "refreshed"
       },
       {
         "file": "S30N6.json",
-        "count": 196,
+        "count": 197,
         "first": "2025-12-16",
-        "last": "2026-10-02",
+        "last": "2026-10-05",
         "source": "descargado",
-        "sha256": "65b34aace689058d0d02f3a08b8ce7404395ddc98ec6b7a23c015ba62ae8e65c",
+        "sha256": "3143ec5a09f1ae6e9bea27e015f50cb3f862cf194663f97512ee3a1cbec0a416",
         "outcome": "refreshed"
       },
       {
@@ -66,26 +66,26 @@
         "count": 117,
         "first": "2025-12-01",
         "last": "2026-05-27",
-        "source": "descargado",
+        "source": "histórico conservado",
         "sha256": "ed61645fb14486b9da711bd577c618bb2177602b49750dca13ae6ed04835ac1a",
-        "outcome": "refreshed"
+        "outcome": "retained"
       },
       {
         "file": "CCL.json",
-        "count": 682,
+        "count": 683,
         "first": "2024-01-02",
-        "last": "2026-10-02",
+        "last": "2026-10-05",
         "source": "descargado",
-        "sha256": "1aa6f4b823e6ed06446babf74ac57c4095f8f6b35cf0c844892d7152a3b2b4ce",
+        "sha256": "8bafd26489a24e824e47374d3ce2cc63c483167e3bc437eba53beba940a0d89e",
         "outcome": "refreshed"
       },
       {
         "file": "MEP.json",
-        "count": 685,
+        "count": 686,
         "first": "2024-01-02",
-        "last": "2026-10-02",
+        "last": "2026-10-05",
         "source": "descargado",
-        "sha256": "b504345030992d456972d76b9ae770c6b1229bd4157581dfc2dbff8ed3456cec",
+        "sha256": "e936830153d1814e44b224396225b83717f92dd111c6bb8770dcf94cc78c59c2",
         "outcome": "refreshed"
       },
       {
@@ -147,9 +147,9 @@
         "count": 3337,
         "first": "2013-01-04",
         "last": "2026-10-01",
-        "source": "carga manual incorporada; se preservaron fechas anteriores",
+        "source": "carga ya incorporada; histórico conservado",
         "sha256": "d2227887e59b2c74880f91361574ffe648a837472321264ccc7752d6a77334dd",
-        "outcome": "refreshed"
+        "outcome": "retained"
       },
       {
         "file": "BCMMA.json",
@@ -164,8 +164,8 @@
   },
   "probe": [
     {
-      "date": "2026-10-02",
-      "close": 473774074
+      "date": "2026-10-05",
+      "close": 744224795
     }
   ]
 }
