@@ -4,8 +4,8 @@
     "BCAHA.json": "d2227887e59b2c74880f91361574ffe648a837472321264ccc7752d6a77334dd"
   },
   "publication": {
-    "generation": "8f6572ca0ccf498ead6c5b4670ae7f8a",
-    "generated_utc": "2026-10-07T00:58:44.566698+00:00",
+    "generation": "9f0aa337a17745a8ab7ba8654d444099",
+    "generated_utc": "2026-10-07T12:32:09.384038+00:00",
     "files": [
       {
         "file": "AL35.json",
@@ -72,20 +72,20 @@
       },
       {
         "file": "CCL.json",
-        "count": 684,
+        "count": 685,
         "first": "2024-01-02",
-        "last": "2026-10-06",
+        "last": "2026-10-07",
         "source": "descargado",
-        "sha256": "fd0a36a4bf108bf354410920c5addcf0754b4c96916d57cdffd4d00299d849fc",
+        "sha256": "8dbfed53f45db842319ba44c8edcf436c982cd441eafb56ab4a525b449f77e81",
         "outcome": "refreshed"
       },
       {
         "file": "MEP.json",
-        "count": 687,
+        "count": 688,
         "first": "2024-01-02",
-        "last": "2026-10-06",
+        "last": "2026-10-07",
         "source": "descargado",
-        "sha256": "662b2a8098216de0e7bfecc9ff0ad3f10e6fd32ddb6418e9c9d1ada3872c4f88",
+        "sha256": "1f518fa579efa45b088466f82f5acf5db42dd8bfdf83f1b36b1ac14f0d83bc10",
         "outcome": "refreshed"
       },
       {
@@ -164,8 +164,8 @@
   },
   "probe": [
     {
-      "date": "2026-10-06",
-      "close": 550903202
+      "date": "2026-10-07",
+      "close": 293639978
     }
   ]
 }
