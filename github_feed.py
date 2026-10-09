@@ -21,6 +21,11 @@ FCI_NAMES = {"BCACCA.json", "BCAHA.json", "BCMMA.json"}
 STATE = "_state.json"
 PUBLICATION = "publication.json"
 SITE_NAMES = set(core.SEEDS) | {PUBLICATION, core.PROBE}
+# Only this exact, previously published schema may be upgraded. Other missing
+# files remain corruption, never a reason to fall back to checkout seeds.
+LEGACY_NAMES = {f"{s}.json" for s in (
+    "AL35", "AE38", "AL41", "AN29", "AO28", "S30N6", "X29Y6", "CCL", "MEP",
+    "T13F6", "T15D5", "T30J6", "TTJ26", "TTM26", "BCACCA", "BCAHA", "BCMMA")}
 
 
 def json_bytes(value):
@@ -75,8 +80,9 @@ class GitHub:
         commit = self.call("GET", f"git/commits/{head}")
         tree = self.call("GET", f"git/trees/{sha(commit['tree']['sha'])}")
         entries = tree.get("tree", [])
-        expected = set(core.SEEDS) | {STATE}
-        if tree.get("truncated") or len(entries) != len(expected) or {e.get("path") for e in entries} != expected:
+        names = {e.get("path") for e in entries}
+        if (tree.get("truncated") or len(entries) != len(names)
+                or names not in (set(core.SEEDS) | {STATE}, LEGACY_NAMES | {STATE})):
             raise core.FeedError("Histórico GitHub incompleto o con archivos inesperados; no se sustituye por semillas.")
         files = {}
         for entry in entries:
@@ -89,7 +95,7 @@ class GitHub:
                 files[entry["path"]] = base64.b64decode(blob["content"].replace("\n", ""), validate=True)
             except (ValueError, TypeError):
                 raise core.FeedError("GitHub: archivo histórico ilegible.") from None
-        validate_history(files)
+        validate_history(files, allow_legacy=True)
         return head, files
 
     def commit(self, files, expected_head):
@@ -117,12 +123,17 @@ class GitHub:
         return target
 
 
-def validate_history(files):
-    if set(files) != set(core.SEEDS) | {STATE}:
+def validate_history(files, allow_legacy=False):
+    if STATE not in files:
         raise core.FeedError("El lote histórico no contiene exactamente los archivos previstos.")
     state = parse_json(files[STATE], STATE)
-    if not isinstance(state, dict) or set(state) != {"version", "applied_fci", "publication", "probe"} or state["version"] != 1:
+    if (not isinstance(state, dict) or set(state) != {"version", "applied_fci", "publication", "probe"}
+            or type(state["version"]) is not int
+            or state["version"] not in ((1, 2) if allow_legacy else (2,))):
         raise core.FeedError("Formato de estado del histórico no reconocido.")
+    expected = LEGACY_NAMES if state["version"] == 1 else set(core.SEEDS)
+    if set(files) != expected | {STATE}:
+        raise core.FeedError("El lote histórico no contiene exactamente los archivos previstos.")
     applied = state["applied_fci"]
     if not isinstance(applied, dict) or not set(applied) <= FCI_NAMES or any(not isinstance(h, str) or not re.fullmatch(r"[0-9a-f]{64}", h) for h in applied.values()):
         raise core.FeedError("Estado de cargas FCI inválido.")
@@ -130,7 +141,7 @@ def validate_history(files):
     if not isinstance(publication, dict) or set(publication) != {"generation", "generated_utc", "files"} or not re.fullmatch(r"[0-9a-f]{32}", str(publication["generation"])):
         raise core.FeedError("Manifest de publicación inválido.")
     reports = publication["files"]
-    if not isinstance(reports, list) or len(reports) != len(core.SEEDS) or {r.get("file") for r in reports} != set(core.SEEDS):
+    if not isinstance(reports, list) or len(reports) != len(expected) or {r.get("file") for r in reports} != expected:
         raise core.FeedError("Manifest de publicación incompleto.")
     for report in reports:
         name = report["file"]
@@ -177,7 +188,7 @@ def apply_fci(previous, applied, directory, failures=None):
     return result, updated, notices
 
 
-def refresh_series(previous, failures):
+def refresh_series(previous, failures, only=None):
     """Isolate provider failures; fallback is always the validated prior series."""
     result, refreshed = dict(previous), set()
     sources = [(core.legacy.INSTRUMENTOS_QT, core.quicktrade),
@@ -188,6 +199,8 @@ def refresh_series(previous, failures):
     today = core.TODAY()
     for config, fetch in sources:
         for symbol in config:
+            if only is not None and symbol != only:
+                continue
             name = f"{symbol}.json"
             try:
                 rows = fetch(symbol, copy.deepcopy(previous[name]), today)
@@ -201,9 +214,10 @@ def refresh_series(previous, failures):
     return result, refreshed
 
 
-def site_from_history(files):
-    state = validate_history(files)
-    return {**{n: core.encode(core.decode(files[n], n)) for n in core.SEEDS},
+def site_from_history(files, allow_legacy=False):
+    state = validate_history(files, allow_legacy=allow_legacy)
+    names = [r["file"] for r in state["publication"]["files"]]
+    return {**{n: core.encode(core.decode(files[n], n)) for n in names},
             PUBLICATION: json_bytes(state["publication"]), core.PROBE: core.encode(state["probe"])}
 
 
@@ -215,25 +229,35 @@ def write_files(directory, files):
         (directory / name).write_bytes(body)
 
 
-def prepare(work, incoming, client=None, initialize=False):
+def prepare(work, incoming, client=None, initialize=False, only=None):
     if work.exists():
         raise core.FeedError("La carpeta de trabajo ya existe; usar una nueva para evitar resultados antiguos.")
+    if only is not None and only not in core.legacy.INSTRUMENTOS_QT:
+        raise core.FeedError("La actualización limitada requiere un bono activo de QuickTrade.")
     seeds = core.local_seeds()
     base_head, old_files = (None, None) if client is None else client.load()
     if old_files is None:
+        if only is not None:
+            raise core.FeedError("La actualización limitada requiere un histórico confirmado previo.")
         if client is not None and not initialize:
             raise core.FeedError("Aún no hay histórico GitHub; elegir Inicializar en la primera ejecución.")
         previous, applied = seeds, {}
     else:
-        old_state = validate_history(old_files)
-        previous = {name: core.decode(old_files[name], name) for name in core.SEEDS}
+        old_state = validate_history(old_files, allow_legacy=True)
+        previous = {name: core.decode(body, name) for name, body in old_files.items() if name != STATE}
+        if old_state["version"] == 1:
+            previous["T15E7.json"] = seeds["T15E7.json"]
+            summary("Ampliación del histórico: se incorpora T15E7; las 17 series guardadas se conservan.")
         for name in core.SEEDS:
             core.require_coverage(seeds[name], previous[name], name)
         applied = old_state["applied_fci"]
     # The previous snapshot was validated globally; only individual refreshes may fail.
     failures = {}
-    candidates, applied, notices = apply_fci(previous, applied, incoming, failures)
-    candidates, refreshed = refresh_series(candidates, failures)
+    if only is None:
+        candidates, applied, notices = apply_fci(previous, applied, incoming, failures)
+    else:
+        candidates, notices = dict(previous), {}
+    candidates, refreshed = refresh_series(candidates, failures, only=only)
     refreshed.update(name for name, notice in notices.items() if notice.startswith("carga manual incorporada"))
     if failures and not refreshed:
         raise core.FeedError("Ninguna serie pudo actualizarse; se conserva la publicación anterior. " +
@@ -243,7 +267,7 @@ def prepare(work, incoming, client=None, initialize=False):
         rows = core.validate(candidates[name], name)
         core.require_coverage(previous[name], rows, name)
         source = notices.get(name, "FCI conservado sin nueva carga" if name in FCI_NAMES else
-            ("descargado" if name[:-5] in core.legacy.INSTRUMENTOS_QT or name[:-5] in core.legacy.DOLARAZO_DOLARES_CONFIG else "histórico conservado"))
+            ("descargado" if name in refreshed else "histórico conservado"))
         report = {"file": name, "count": len(rows), "first": rows[0]["date"], "last": rows[-1]["date"],
                   "source": source, "sha256": core.digest(core.encode(rows)),
                   "outcome": "refreshed" if name in refreshed else "retained"}
@@ -252,14 +276,14 @@ def prepare(work, incoming, client=None, initialize=False):
                           outcome="retained_after_error", error=failures[name])
         reports.append(report)
     publication = {"generation": uuid.uuid4().hex, "generated_utc": datetime.now(timezone.utc).isoformat(), "files": reports}
-    state = {"version": 1, "applied_fci": applied, "publication": publication,
+    state = {"version": 2, "applied_fci": applied, "publication": publication,
              "probe": [{"date": core.TODAY().isoformat(), "close": uuid.uuid4().int % 1_000_000_000 + 1}]}
     history = {**{n: core.encode(candidates[n]) for n in core.SEEDS}, STATE: json_bytes(state)}
     validate_history(history)
     write_files(work / "next-history", history)
     write_files(work / "site", site_from_history(history))
     if old_files is not None:
-        write_files(work / "previous-site", site_from_history(old_files))
+        write_files(work / "previous-site", site_from_history(old_files, allow_legacy=True))
     run = {"base_head": base_head, "local_only": client is None, "has_previous": old_files is not None,
            "generation": publication["generation"], "status": "validated_not_published", "warnings": failures}
     (work / "run.json").write_bytes(json_bytes(run))
@@ -277,21 +301,22 @@ def prepare(work, incoming, client=None, initialize=False):
     return run
 
 
-def read_site(directory):
+def read_site(directory, allow_legacy=False):
     entries = list(directory.iterdir())
-    if {p.name for p in entries} != SITE_NAMES or any(not p.is_file() or p.is_symlink() for p in entries):
-        raise core.FeedError("El sitio debe contener sólo las 17 cotizaciones, publication.json y la prueba sintética.")
+    allowed = (SITE_NAMES, LEGACY_NAMES | {PUBLICATION, core.PROBE}) if allow_legacy else (SITE_NAMES,)
+    if {p.name for p in entries} not in allowed or any(not p.is_file() or p.is_symlink() for p in entries):
+        raise core.FeedError("El sitio no contiene exactamente las cotizaciones previstas, publication.json y la prueba sintética.")
     return {p.name: p.read_bytes() for p in entries}
 
 
-def verify_site(directory, base_url, attempts=13, pause=5):
+def verify_site(directory, base_url, attempts=13, pause=5, allow_legacy=False):
     u = urlsplit(base_url)
     if u.scheme != "https" or not u.hostname or not u.hostname.endswith(".github.io") or u.username or u.password or u.query or u.fragment or u.port:
         raise core.FeedError("Se requiere la URL HTTPS de GitHub Pages, sin parámetros.")
     base = base_url.rstrip("/") + "/"
-    expected = read_site(directory)
+    expected = read_site(directory, allow_legacy=allow_legacy)
     # The manifest changes every run, even when no market prices have changed.
-    order = [PUBLICATION, core.PROBE, *core.SEEDS]
+    order = [PUBLICATION, core.PROBE, *sorted(set(expected) - {PUBLICATION, core.PROBE})]
     for attempt in range(attempts):
         mismatches = []
         for name in order:
@@ -350,13 +375,14 @@ def main(argv=None):
     parser.add_argument("--incoming", type=Path, default=core.ROOT / "entradas-fci")
     parser.add_argument("--local", action="store_true")
     parser.add_argument("--initialize", action="store_true")
+    parser.add_argument("--only", help="Actualizar sólo este bono activo; conservar las demás series y cargas FCI pendientes")
     args = parser.parse_args(argv)
     try:
         if args.mode == "stage":
-            prepare(args.work, args.incoming, None if args.local else GitHub(), args.initialize)
+            prepare(args.work, args.incoming, None if args.local else GitHub(), args.initialize, only=args.only)
         elif args.mode.startswith("verify"):
             previous = args.mode == "verify-previous"
-            verify_site(args.work / ("previous-site" if previous else "site"), os.environ.get("PAGES_BASE_URL", ""))
+            verify_site(args.work / ("previous-site" if previous else "site"), os.environ.get("PAGES_BASE_URL", ""), allow_legacy=previous)
             if not previous:
                 run = parse_json((args.work / "run.json").read_bytes(), "run")
                 (args.work / "verified.json").write_bytes(json_bytes({"generation": run["generation"]}))

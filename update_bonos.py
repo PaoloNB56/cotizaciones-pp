@@ -36,6 +36,7 @@ INSTRUMENTOS_QT = {
     #"X29Y6":  {"simbolo": "36686", "fecha_desde": "01/12/2024"},  # Vencido: conservar JSON sin descarga
     "AO28":  {"simbolo": "38405", "fecha_desde": "01/04/2026"},
     "S30N6": {"simbolo": "37006", "fecha_desde": "01/01/2000"},  # Todo el histórico disponible
+    "T15E7": {"simbolo": "30325", "fecha_desde": "01/01/2000"},  # Todo el historico disponible
 }
 
 # Dólares desde Dolarazo (API JSON)

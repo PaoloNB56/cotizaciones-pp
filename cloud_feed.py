@@ -23,7 +23,7 @@ import update_bonos as legacy
 ROOT = Path(__file__).resolve().parent
 # Explicit publication list: never glob the project or upload source documents.
 SEEDS = {f"{s}.json": f"{s}.json" for s in (
-    "AL35", "AE38", "AL41", "AN29", "AO28", "S30N6", "X29Y6",
+    "AL35", "AE38", "AL41", "AN29", "AO28", "S30N6", "T15E7", "X29Y6",
     "CCL", "MEP", "T13F6", "T15D5", "T30J6", "TTJ26", "TTM26",
 )}
 SEEDS.update({f"{s}.json": f"FCI/{s}.json" for s in ("BCACCA", "BCAHA", "BCMMA")})

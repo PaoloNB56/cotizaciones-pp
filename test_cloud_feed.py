@@ -68,7 +68,7 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(c.merge(NEW, correction), OLD + correction)
 
     def test_all_real_seeds(self):
-        self.assertEqual(len(c.local_seeds()), 17)
+        self.assertEqual(len(c.local_seeds()), 18)
 
     def test_portable_excel_conversion_and_ticker(self):
         book = Workbook()

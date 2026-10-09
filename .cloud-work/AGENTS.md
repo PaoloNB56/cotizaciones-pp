@@ -12,6 +12,7 @@
 
 - Never upload this directory as a public folder or include it in the Android installation ZIP.
 - Deploy only the explicitly validated `site/` content; `previous-site/` is exclusively a rollback artifact. Never deploy `next-history/` or the entire run directory. Documentation may be included in an explicit installation package.
+- During the explicit schema-1 to schema-2 transition, `previous-site/` has the exact former 17 quote files plus manifest/probe; `site/` has 18 quote files plus manifest/probe. Previous-site verification alone permits that legacy allowlist.
 - Quote backups and reports contain no access tokens, private config or portfolio data.
 - Only `published_verified` reports establish complete publication and persistence; staged data and `validated_not_published` do not. This status does not guarantee every series refreshed: inspect `run.json` warnings and publication report outcomes (`refreshed`, `retained`, `retained_after_error`), last dates and error reasons.
 - Preserve `previous/` and `recovery.json` for investigation of incomplete publication. No automatic cleanup or deletion is part of routine runs.

@@ -19,6 +19,7 @@
 # Work Guidance
 
 - Main UI name is `Actualizar cotizaciones`; default mode is `Actualizar`. `Inicializar` is for first publication and `Validar` does not deploy.
+- Optional `instrumento` input passes through an environment variable and a quoted Bash array to `--only`; empty means all sources. Limited runs retain other series and do not consume manual FCI uploads. Use `T15E7` for its first publication.
 - Preserve whole-workflow concurrency and the ordering prepare, deploy, verify, commit.
 - Use reviewed stable action versions declaring Node.js 24; inspect nested actions in composite wrappers too. Do not suppress runtime deprecation by allowing an insecure Node version. The Python quote runtime remains 3.12.
 

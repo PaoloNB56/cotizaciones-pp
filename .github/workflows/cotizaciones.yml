@@ -10,6 +10,11 @@ on:
           - Actualizar
           - Inicializar
           - Validar
+      instrumento:
+        description: 'Opcional: actualizar solo este bono (vacio = todos)'
+        type: string
+        required: false
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -42,14 +47,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           MODE: ${{ inputs.mode }}
+          INSTRUMENTO: ${{ inputs.instrumento }}
         shell: bash
         run: |
+          extra=()
+          if [[ -n "$INSTRUMENTO" ]]; then
+            extra=(--only "$INSTRUMENTO")
+          fi
           if [[ "$MODE" == "Inicializar" ]]; then
-            python -B -u github_feed.py stage --initialize --work .cloud-work/pages
+            python -B -u github_feed.py stage --initialize --work .cloud-work/pages "${extra[@]}"
           elif [[ "$MODE" == "Validar" ]]; then
-            python -B -u github_feed.py stage --initialize --work .cloud-work/pages
+            python -B -u github_feed.py stage --initialize --work .cloud-work/pages "${extra[@]}"
           else
-            python -B -u github_feed.py stage --work .cloud-work/pages
+            python -B -u github_feed.py stage --work .cloud-work/pages "${extra[@]}"
           fi
       - name: Configurar Pages
         if: inputs.mode != 'Validar'

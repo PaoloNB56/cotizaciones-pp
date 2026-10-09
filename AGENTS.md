@@ -80,6 +80,7 @@ Default section order:
 - The user explicitly authorized the public repository `PaoloNB56/cotizaciones-pp`. It is installed with Pages source `GitHub Actions`; public quotes use `https://paolonb56.github.io/cotizaciones-pp/`. Verify session and run state before remote changes.
 - pCloud and Termux are no longer selected. Retain previous local files without using them in the GitHub workflow or installation package.
 - FCI source TXT are generated manually from Balanz. Never scrape or automate requests to Balanz. Convert on the PC with the existing converter and manually upload only quote JSON. No mobile/browser converter is wanted.
+- The optional PC launcher in D:\ScriptsPython\pp_feed automates conversion and upload of changed FCI JSON to entradas-fci, using Git Credential Manager. The user still starts Actions separately; it must never dispatch a workflow.
 - Include S30N6 with all available QuickTrade history and the existing close / 1000 conversion. Preserve source files and historical series; do not refresh unrelated outputs for narrow changes.
 - Credentials, portfolio files, transactions and original TXT stay outside the public repository and publication. Use the automatic ephemeral GITHUB_TOKEN; no manual token or developer registration is required by this workflow.
 
@@ -88,10 +89,11 @@ Default section order:
 - Root owns the original Python downloader, FCI converter, BAT, root quote JSON, Balanz TXT and independent Inflación.xlsx. The BAT still targets D:\scriptspython\pp_feed, not this copy; do not use it for validation here.
 - update_bonos.py owns QuickTrade/Dolarazo source configuration, shared conversion and the retained HTTP server. The server only serves root files on port 8000/all interfaces; the GitHub flow never starts it.
 - fondos_txt_a_json.py converts root Balanz TXT to FCI JSON. It does not download fund data. Its legacy pandas-independent conversion retains its original behavior.
-- cloud_feed.py owns portable source retrieval, strict validation and the 17-file SEEDS list. Its pCloud client/CLI are retained legacy functionality, not the chosen runner. It imports shared functions without starting the legacy main or loading pandas.
+- cloud_feed.py owns portable source retrieval, strict validation and the 18-file SEEDS list. Its pCloud client/CLI are retained legacy functionality, not the chosen runner. It imports shared functions without starting the legacy main or loading pandas.
 - github_feed.py owns GitHub history persistence, per-series provider refresh and fallback, manual FCI merging, Pages staging and public URL verification. README.md and LEEME-NUBE.md describe the current GitHub workflow.
 - test_cloud_feed.py and test_github_feed.py own offline validation, failure/recovery, persistence and manual-input tests. requirements-cloud.in pins the portable dependencies; pandas is only needed by the original DataFrame path.
 - package_github.py builds an explicit-list installation package for a new public repository. It never publishes remotely and excludes raw TXT, XLSX, portfolios, credentials, runtime data, pCloud/Termux setup and old ZIPs.
+- local-fci/ owns the optional PC conversion/upload launcher and its offline Git tests, installed separately in D:\ScriptsPython\pp_feed. It is excluded from the public installation bundle and does not change the Pages publisher.
 - pcloud_local.py, actualizar-termux.sh, package_android.py and pp-feed-android.zip are unselected legacy alternatives. github-actions.example.yml only points readers to the current workflow. Do not activate legacy paths automatically.
 - Existing .git is not an operational repository. Do not modify .git, .agents, .codex or .hash metadata as part of feed changes.
 
@@ -99,15 +101,18 @@ Default section order:
 
 - INSTRUMENTOS_QT maps output names to verified QuickTrade numeric IDs and dd/MM/yyyy start dates. Requests use especieVencimiento="24 hs.". AN29/AO28 select AN29D/AO28D but keep their PP output names.
 - S30N6 uses ID 37006 and 01/01/2000 as an all-history lower bound, not an asserted listing date. QuickTrade conversion divides by 1000 and rounds to six decimals; do not extend this factor to FCI or another asset class.
+- T15E7 uses verified QuickTrade ID 30325 and 01/01/2000 as an all-history lower bound, with the same close / 1000 convention.
 - Quote JSON contains date-sorted objects with exactly ISO date and numeric close. Reject empty, malformed, nonfinite, nonpositive, duplicated or future data. Preserve all original local JSON/TXT/XLSX during portable runs.
 - Portable QuickTrade verifies HTTPS, ticker, row validity and known historical date coverage. Dolarazo uses venta, skips weekends and refreshes a seven-day overlap including same-day corrections, while preserving older history. The original local Dolarazo path remains incremental after its last date.
 - X29Y6, T13F6, T15D5, T30J6, TTJ26 and TTM26 are disabled in INSTRUMENTOS_QT because the user retired these matured bonds. Preserve their JSON, committed history and public URLs; keep them in SEEDS without provider requests.
-- SEEDS is the explicit publication allowlist of 17 series, including inactive bonds and FCI. FCI paths are flattened only in the published destination. No recursive source-directory publication.
+- SEEDS is the explicit publication allowlist of 18 series, including inactive bonds and FCI. FCI paths are flattened only in the published destination. No recursive source-directory publication.
 - github_feed.py reads the complete committed snapshot on the dedicated feed-history branch. Missing history requires explicit initialization; corrupt/incomplete history aborts. Pin reads to one commit and verify the saved manifest hashes. Never silently rebuild from stale checkout seeds.
+- GitHub history schema 2 contains 18 series. Only an intact schema-1 snapshot with the exact former 17-series allowlist can migrate: preserve every saved series and FCI upload hash, add only the validated T15E7 seed, and persist schema 2 after public verification. Never initialize or replace existing history to add a bond. Rollback artifacts and verification accept that exact prior 17-series site.
+- Optional workflow input instrumento / CLI --only updates one active QuickTrade bond, preserving every other saved series and leaving manual FCI inputs pending. Use this for narrow additions. Empty input retains ordinary full-update behavior; limited mode requires previous confirmed history.
 - New FCI uploads in entradas-fci merge by date; supplied dates replace only those dates. Store canonical upload hashes with confirmed history so repeating an old unchanged upload is idempotent. Missing input never removes prior quotes.
 - In the GitHub runner, a provider or recognized FCI input failure retains that series from validated history while other valid updates proceed. Never accept invalid replacement data. An unsuccessful FCI input keeps its prior applied hash so a corrected upload can be retried. If every attempted refresh fails and no new valid manual input succeeds, abort without publishing. Corrupt history, unexpected inputs and deployment infrastructure errors remain global failures.
 - Successful partial publication stays green with warnings; summary and publication reports identify retained series, actual last dates and error reasons. `published_verified` confirms publication and persistence, not freshness of every series.
-- Stage the entire batch before deployment. The Pages artifact contains exactly 17 quote JSON, publication.json and a reserved synthetic _pp_feed_probe.json. No code, source TXT, state file or credentials are deployed.
+- Stage the entire batch before deployment. The Pages artifact contains exactly 18 quote JSON, publication.json and a reserved synthetic _pp_feed_probe.json. No code, source TXT, state file or credentials are deployed.
 - Verify every fixed public URL without cache-busting parameters. The generation manifest and synthetic probe change per run, allowing overwrite/cache checks even with unchanged prices. Passing a local/mock test is not live Pages evidence.
 - Persist history only after public verification, using parent-linked commits and a non-forced ref update. Attempt whole-site rollback from the previous confirmed artifact if deployment, verification or persistence fails. Keep failed runs red; a first publication has no previous site to restore.
 - Deployment and Git history commit are not one atomic transaction. Do not guarantee recovery after cancellation, timeout or network loss; uncertain ref writes are checked before reporting failure. Use one publishing workflow and preserve whole-run concurrency serialization.
@@ -131,4 +136,5 @@ Default section order:
 - .github/AGENTS.md: manual workflow, Pages deployment, verification, persistence and rollback sequencing.
 - .cloud-work/AGENTS.md: staged candidates, reports and recovery artifacts; never a publication source directory as a whole.
 - .work/AGENTS.md: older research scripts and external dependency junctions; not routine feed processing.
+- local-fci/AGENTS.md: optional local BAT, validated FCI upload to GitHub, authentication and offline tests; Actions stays manual.
 - Other root files and metadata remain root-owned. Single workflows do not require further child levels.

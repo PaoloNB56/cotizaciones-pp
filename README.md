@@ -2,6 +2,7 @@
 
 Actualización manual desde el celular mediante **GitHub Actions**, con JSON públicos y URL estables en **GitHub Pages**. La PC puede estar apagada.
 
+- T15E7 está incluido; [JSON público](https://paolonb56.github.io/cotizaciones-pp/T15E7.json). El campo opcional **instrumento** permite actualizar solo ese bono; dejarlo vacío para una actualización completa.
 - Bonos QuickTrade y MEP/CCL: descarga automática al pulsar **Actualizar cotizaciones**.
 - FCI: adquisición manual desde Balanz, conversión en la PC y carga de JSON en [entradas-fci](entradas-fci/README.md). No se hace scraping.
 - Conservación de históricos, validación completa antes de publicar y verificación de las URL.

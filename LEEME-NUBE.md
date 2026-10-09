@@ -9,6 +9,8 @@ El repositorio público [PaoloNB56/cotizaciones-pp](https://github.com/PaoloNB56
 3. Esperar que finalice correctamente. El resumen debe indicar **published_verified**, con últimas fechas por instrumento. Si dice **PUBLICACIÓN CON AVISOS**, las series indicadas conservaron su histórico anterior; las demás válidas se publicaron. Verde no significa que todos los proveedores aportaron datos nuevos.
 4. Abrir PP y actualizar las cotizaciones históricas. La PC puede estar apagada.
 
+El campo opcional **instrumento** puede indicar un solo bono activo, por ejemplo `T15E7`. En ese caso se conserva el resto del histórico y no se incorporan cargas FCI pendientes. Para actualizar todo como siempre, dejar ese campo vacío.
+
 Guardar la página de Actions como favorito o acceso directo del navegador. La app de GitHub no es requisito. No hay horarios ni ejecución automática al subir archivos.
 
 ## Instalación inicial
@@ -43,14 +45,16 @@ No subir TXT originales, capturas, datos de cuenta ni cartera a `entradas-fci`. 
 
 La base activa es `https://paolonb56.github.io/cotizaciones-pp/`. En los ejemplos siguientes, `BASE` representa esa dirección sin la barra final.
 
-Se despliegan únicamente estos 17 JSON de cotizaciones, todos en la raíz del sitio:
+Se despliegan únicamente estos 18 JSON de cotizaciones, todos en la raíz del sitio:
 
 ```text
-AL35.json AE38.json AL41.json AN29.json AO28.json S30N6.json X29Y6.json
+AL35.json AE38.json AL41.json AN29.json AO28.json S30N6.json T15E7.json X29Y6.json
 CCL.json MEP.json
 T13F6.json T15D5.json T30J6.json TTJ26.json TTM26.json
 BCACCA.json BCAHA.json BCMMA.json
 ```
+
+T15E7 usa el histórico completo disponible en QuickTrade (ID 30325), con la misma conversión de cierre / 1000. Su URL es [T15E7.json](https://paolonb56.github.io/cotizaciones-pp/T15E7.json). La primera actualización amplía automáticamente el histórico validado de 17 a 18 series; no usar **Inicializar** para esta incorporación.
 
 Los bonos vencidos **X29Y6, T13F6, T15D5, T30J6, TTJ26 y TTM26** se conservan como históricos: ya no se descargan cotizaciones para ellos. Sus JSON y URL siguen disponibles y cada publicación conserva sus datos guardados.
 
@@ -58,7 +62,7 @@ También se publican `publication.json` (generación, fechas, recuentos, hashes 
 
 Los FCI publicados se aplanan: `FCI/BCACCA.json` local corresponde a `BASE/BCACCA.json`. Se conserva el formato `[ {"date": "AAAA-MM-DD", "close": número} ]`.
 
-La rama pública `feed-history` guarda los 17 históricos y `_state.json` para continuidad y auditoría. El estado sólo contiene metadatos de publicación y hashes de cargas FCI, nunca credenciales. El código está en la rama principal; Pages sólo despliega los archivos preparados, no el repositorio entero.
+La rama pública `feed-history` guarda los 18 históricos y `_state.json` para continuidad y auditoría. El estado sólo contiene metadatos de publicación y hashes de cargas FCI, nunca credenciales. El código está en la rama principal; Pages sólo despliega los archivos preparados, no el repositorio entero.
 
 ## Configuración de PP
 
@@ -84,7 +88,7 @@ La prueba final será actualizar desde el celular con la PC apagada, verificar �
 - Los FCI no se descargan. Se validan las cargas manuales, se combinan por fecha y se registra su hash para no reaplicar indefinidamente un archivo antiguo.
 - Si falla un proveedor o un JSON FCI reconocido, se conserva la última serie válida del histórico y se publican las otras actualizaciones válidas. No se inventan precios ni fechas para completar huecos. Si fallan todas las actualizaciones intentadas y tampoco hay una carga manual nueva válida, no se publica. Un histórico corrupto o incompleto, un archivo inesperado o una estructura insegura de entradas siguen interrumpiendo la preparación completa.
 - Se valida el lote completo antes de crear el sitio desplegable, incluidas las series conservadas. Una publicación parcial correcta termina verde con avisos; el resumen identifica las series pendientes y sus motivos.
-- Pages recibe un lote completo. Se comprueba `publication.json`, la prueba ficticia y las 17 URL exactas sin query strings. Se reintenta la lectura durante al menos un minuto más los tiempos de red; la caché propia de PP o de otros puntos de distribución requiere comprobación aparte.
+- Pages recibe un lote completo. Se comprueba `publication.json`, la prueba ficticia y las 18 URL exactas sin query strings. Se reintenta la lectura durante al menos un minuto más los tiempos de red; la caché propia de PP o de otros puntos de distribución requiere comprobación aparte.
 - Sólo después de comprobar la publicación se guarda el nuevo histórico, manteniendo los commits anteriores y sin forzar la rama. Si falla despliegue, verificación o persistencia, el workflow intenta volver a desplegar el sitio confirmado anterior y verificarlo. El intento fallido sigue rojo aunque la restauración funcione.
 - La primera publicación no tiene sitio anterior para restaurar. Tampoco se garantiza recuperación después de cancelar el workflow, agotar su tiempo o perder acceso a GitHub. Pages y la rama histórica no forman una transacción única; una escritura con respuesta incierta puede necesitar revisar ambos historiales.
 - No ejecutar otros publicadores ni modificar manualmente `feed-history`. El workflow serializa ejecuciones y no cancela automáticamente una publicación en curso.

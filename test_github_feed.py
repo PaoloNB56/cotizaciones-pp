@@ -97,6 +97,119 @@ class StagingTests(unittest.TestCase):
         self.assertNotIn(g.STATE, g.read_site(path / "site"))
         g.validate_history(files)
 
+    def legacy_snapshot(self):
+        _, files = self.make("legacy-fixture")
+        del files["T15E7.json"]
+        state = g.parse_json(files[g.STATE], "state")
+        state["version"] = 1
+        state["publication"]["files"] = [r for r in state["publication"]["files"] if r["file"] != "T15E7.json"]
+        state["applied_fci"] = {"BCACCA.json": c.digest(c.encode(OLD))}
+        files[g.STATE] = g.json_bytes(state)
+        g.validate_history(files, allow_legacy=True)
+        return files
+
+    def test_legacy_migration_preserves_all_previous_series_and_fci_markers(self):
+        self.seeds = {n: NEW for n in c.SEEDS}
+        saved = self.legacy_snapshot()
+        self.seeds = {n: OLD for n in c.SEEDS}
+        class Client:
+            def load(self): return "a" * 40, saved
+        path, current = self.make("upgraded", Client())
+        for name in g.LEGACY_NAMES:
+            self.assertEqual(current[name], saved[name])
+        self.assertEqual(c.decode(current["T15E7.json"], "T15E7"), OLD)
+        state = g.validate_history(current)
+        self.assertEqual(state["version"], 2)
+        self.assertEqual(state["applied_fci"], {"BCACCA.json": c.digest(c.encode(OLD))})
+        self.assertEqual(json.loads((path / "run.json").read_bytes())["base_head"], "a" * 40)
+        self.assertEqual(set(g.read_site(path / "previous-site", allow_legacy=True)),
+                         g.LEGACY_NAMES | {g.PUBLICATION, c.PROBE})
+        self.assertIn("T15E7.json", g.read_site(path / "site"))
+
+    def test_missing_old_series_is_not_treated_as_an_addition(self):
+        saved = self.legacy_snapshot()
+        del saved["MEP.json"]
+        class Client:
+            def load(self): return "a" * 40, saved
+        with self.assertRaises(c.FeedError):
+            self.make("bad", Client())
+        self.assertFalse((self.root / "bad/site").exists())
+
+    def test_current_schema_missing_new_bond_is_corruption(self):
+        _, files = self.make()
+        del files["T15E7.json"]
+        with self.assertRaises(c.FeedError):
+            g.validate_history(files, allow_legacy=True)
+
+    def test_legacy_digest_corruption_and_wrong_version_are_rejected(self):
+        files = self.legacy_snapshot()
+        bad = dict(files, **{"CCL.json": c.encode(NEW)})
+        with self.assertRaises(c.FeedError):
+            g.validate_history(bad, allow_legacy=True)
+        state = g.parse_json(files[g.STATE], "state")
+        state["version"] = 2
+        files[g.STATE] = g.json_bytes(state)
+        with self.assertRaises(c.FeedError):
+            g.validate_history(files, allow_legacy=True)
+
+    def test_previous_site_verification_accepts_only_complete_legacy_site(self):
+        saved = self.legacy_snapshot()
+        site = g.site_from_history(saved, allow_legacy=True)
+        path = self.root / "rollback"
+        g.write_files(path, site)
+        with self.assertRaises(c.FeedError):
+            g.read_site(path)
+        with patch.object(c, "download_bytes", side_effect=lambda url: (site[url.rsplit('/', 1)[1]], {})) as fetch:
+            g.verify_site(path, "https://user.github.io/quotes", attempts=1, allow_legacy=True)
+        self.assertEqual(fetch.call_count, len(g.LEGACY_NAMES) + 2)
+        (path / "CCL.json").unlink()
+        with self.assertRaises(c.FeedError):
+            g.read_site(path, allow_legacy=True)
+
+    def test_github_load_reads_legacy_snapshot_but_commit_rejects_it(self):
+        files = self.legacy_snapshot()
+        client = object.__new__(g.GitHub)
+        names = list(files)
+        entries = [{"path": n, "mode": "100644", "type": "blob", "sha": f"{i+1:040x}"} for i, n in enumerate(names)]
+        replies = [{"tree": {"sha": "b" * 40}}, {"tree": entries}]
+        replies += [{"encoding": "base64", "content": base64.b64encode(files[n]).decode()} for n in names]
+        with patch.object(client, "head", return_value="a" * 40), patch.object(client, "call", side_effect=replies):
+            head, result = client.load()
+        self.assertEqual(head, "a" * 40)
+        self.assertEqual(result, files)
+        with patch.object(client, "call") as api, self.assertRaises(c.FeedError):
+            client.commit(files, head)
+        api.assert_not_called()
+
+    def test_limited_addition_fetches_only_new_bond_and_preserves_manual_inputs(self):
+        saved = self.legacy_snapshot()
+        class Client:
+            def load(self): return "a" * 40, saved
+        (self.incoming / "BCAHA.json").write_bytes(c.encode(NEW))
+        path = self.root / "limited"
+        with patch.object(c, "quicktrade", return_value=NEW) as qt, patch.object(c, "dollars") as dollars:
+            g.prepare(path, self.incoming, Client(), only="T15E7")
+        self.assertEqual(qt.call_count, 1)
+        self.assertEqual(qt.call_args.args[0], "T15E7")
+        dollars.assert_not_called()
+        for name in g.LEGACY_NAMES:
+            self.assertEqual((path / "next-history" / name).read_bytes(), saved[name])
+        self.assertEqual(c.decode((path / "next-history/T15E7.json").read_bytes(), "T15E7"), NEW)
+        self.assertEqual((self.incoming / "BCAHA.json").read_bytes(), c.encode(NEW))
+
+    def test_limited_update_rejects_unknown_symbol_and_uninitialized_history(self):
+        for symbol in ("NOEXISTE", "T15E7"):
+            with self.subTest(symbol=symbol), self.assertRaises(c.FeedError):
+                g.prepare(self.root / "bad", self.incoming, only=symbol)
+
+    def test_failed_limited_addition_does_not_publish_seed_as_success(self):
+        saved = self.legacy_snapshot()
+        class Client:
+            def load(self): return "a" * 40, saved
+        with patch.object(c, "quicktrade", side_effect=c.FeedError("offline")), self.assertRaises(c.FeedError):
+            g.prepare(self.root / "failed", self.incoming, Client(), only="T15E7")
+        self.assertFalse((self.root / "failed/site").exists())
+
     def test_corrupt_history_digest_fails(self):
         _, files = self.make()
         files["MEP.json"] = c.encode(NEW)
@@ -259,7 +372,7 @@ class StagingTests(unittest.TestCase):
         site = g.read_site(path / "site")
         with patch.object(c, "download_bytes", side_effect=lambda url: (site[url.rsplit("/", 1)[1]], {})) as fetch:
             g.verify_site(path / "site", "https://user.github.io/quotes", attempts=1)
-        self.assertEqual(fetch.call_count, 19)
+        self.assertEqual(fetch.call_count, len(c.SEEDS) + 2)
 
     def test_local_or_unverified_build_cannot_commit(self):
         path, _ = self.make()
