@@ -6,8 +6,8 @@
     "BCMMA.json": "4cc254c6b808ce3c9d0e294603ded6e02eb773ea62b4e9ddbdde918865375876"
   },
   "publication": {
-    "generation": "0346430461c446e7b585118fd4d10ba1",
-    "generated_utc": "2026-10-13T17:29:26.222013+00:00",
+    "generation": "baa5cebe3a0046fdb835e341b211768a",
+    "generated_utc": "2026-10-13T18:52:10.843566+00:00",
     "files": [
       {
         "file": "AL35.json",
@@ -15,7 +15,7 @@
         "first": "2024-12-02",
         "last": "2026-10-13",
         "source": "descargado",
-        "sha256": "5d8115d88a7d706ed4d0a40b0bce9b46469f428120fe899c10c192e8461ff811",
+        "sha256": "ad21bdbe152dfc0adfb11905b95d2cb0bb8562d8a28aac4e8087568424067730",
         "outcome": "refreshed"
       },
       {
@@ -24,7 +24,7 @@
         "first": "2024-12-02",
         "last": "2026-10-13",
         "source": "descargado",
-        "sha256": "1dd5ac1a2457ba24e9f840e8f7790a8751f7accc06c48cfceeb7c47d0a09200d",
+        "sha256": "32cbab00a067833a2807f7fdf40de52f01a84de6969b845d9eec870a32747d4c",
         "outcome": "refreshed"
       },
       {
@@ -33,7 +33,7 @@
         "first": "2024-12-02",
         "last": "2026-10-13",
         "source": "descargado",
-        "sha256": "20b56e315f6b288a3c9ff115401ba0eb647c4e1ba84bba1cdd28eaf62f3063a5",
+        "sha256": "d971bb767df8de988cfbdcf0bd45f307e109f3c94d46a2fdb27e77b8489d68cb",
         "outcome": "refreshed"
       },
       {
@@ -42,7 +42,7 @@
         "first": "2025-12-15",
         "last": "2026-10-13",
         "source": "descargado",
-        "sha256": "86be8728a5a4a4ecb1ff5872ba1d48f3de8aaf8fbfc79bfdf904444d075d6514",
+        "sha256": "e94d0d0f3daf123c1283b4af65a03deb39a33fd54a1a2c79b3dbb371e5d200ab",
         "outcome": "refreshed"
       },
       {
@@ -51,7 +51,7 @@
         "first": "2026-04-01",
         "last": "2026-10-13",
         "source": "descargado",
-        "sha256": "225c1469246e059b8573b9426077fb806c00aeaa6c316ded54708f644e91fc88",
+        "sha256": "2a513b0779aa4e3c2c50c2ed20cf13895133b66a9a82b1752c16d62cef4efa00",
         "outcome": "refreshed"
       },
       {
@@ -60,7 +60,7 @@
         "first": "2025-12-16",
         "last": "2026-10-13",
         "source": "descargado",
-        "sha256": "e0c15f85836a958d0f1ca5f06f84cdbd2c4d548b0ad18e4bf7f44affe4461026",
+        "sha256": "6e112104d3f29118d4d4b9eaf0d478afa5740a4efe77099d31b57cca694405cf",
         "outcome": "refreshed"
       },
       {
@@ -69,7 +69,7 @@
         "first": "2025-02-03",
         "last": "2026-10-13",
         "source": "descargado",
-        "sha256": "cc6a7ef4d2aaa3857af76696c81e8e4bd3be6dcd3f109ef04485d53e9111ab0d",
+        "sha256": "cdd3d1c7ff00be91d5ce28b25bf22223b6f06ea90da57e430d8e99db85d993a0",
         "outcome": "refreshed"
       },
       {
@@ -96,7 +96,7 @@
         "first": "2024-01-02",
         "last": "2026-10-13",
         "source": "descargado",
-        "sha256": "052c07946af2dbed04c24815e64b056efc0de8dd4d04bf7062015220e25be5c1",
+        "sha256": "b0041e7e79b0233dea71ef3f8ec28aecdcb3b84e2bf3f4dafc718a6e9adaec30",
         "outcome": "refreshed"
       },
       {
@@ -176,7 +176,7 @@
   "probe": [
     {
       "date": "2026-10-13",
-      "close": 566618686
+      "close": 256506703
     }
   ]
 }
