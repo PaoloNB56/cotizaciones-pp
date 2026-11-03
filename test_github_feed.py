@@ -97,12 +97,13 @@ class StagingTests(unittest.TestCase):
         self.assertNotIn(g.STATE, g.read_site(path / "site"))
         g.validate_history(files)
 
-    def legacy_snapshot(self):
-        _, files = self.make("legacy-fixture")
-        del files["T15E7.json"]
+    def legacy_snapshot(self, version=1):
+        _, files = self.make(f"legacy-fixture-{version}")
+        names = g.LEGACY_SCHEMAS[version]
+        files = {n: body for n, body in files.items() if n in names or n == g.STATE}
         state = g.parse_json(files[g.STATE], "state")
-        state["version"] = 1
-        state["publication"]["files"] = [r for r in state["publication"]["files"] if r["file"] != "T15E7.json"]
+        state["version"] = version
+        state["publication"]["files"] = [r for r in state["publication"]["files"] if r["file"] in names]
         state["applied_fci"] = {"BCACCA.json": c.digest(c.encode(OLD))}
         files[g.STATE] = g.json_bytes(state)
         g.validate_history(files, allow_legacy=True)
@@ -119,7 +120,7 @@ class StagingTests(unittest.TestCase):
             self.assertEqual(current[name], saved[name])
         self.assertEqual(c.decode(current["T15E7.json"], "T15E7"), OLD)
         state = g.validate_history(current)
-        self.assertEqual(state["version"], 2)
+        self.assertEqual(state["version"], 3)
         self.assertEqual(state["applied_fci"], {"BCACCA.json": c.digest(c.encode(OLD))})
         self.assertEqual(json.loads((path / "run.json").read_bytes())["base_head"], "a" * 40)
         self.assertEqual(set(g.read_site(path / "previous-site", allow_legacy=True)),
@@ -134,6 +135,81 @@ class StagingTests(unittest.TestCase):
         with self.assertRaises(c.FeedError):
             self.make("bad", Client())
         self.assertFalse((self.root / "bad/site").exists())
+
+    def test_schema_two_addition_preserves_eighteen_series_and_pending_fci(self):
+        self.seeds = {n: NEW for n in c.SEEDS}
+        saved = self.legacy_snapshot(version=2)
+        self.seeds = {n: OLD for n in c.SEEDS}
+        class Client:
+            def load(self): return "a" * 40, saved
+        (self.incoming / "BCAHA.json").write_bytes(c.encode(NEW))
+        path = self.root / "s29e7"
+        with patch.object(c, "quicktrade", return_value=NEW) as qt, patch.object(c, "dollars") as dollars:
+            g.prepare(path, self.incoming, Client(), only="S29E7")
+        qt.assert_called_once_with("S29E7", OLD, c.TODAY())
+        dollars.assert_not_called()
+        files = {p.name: p.read_bytes() for p in (path / "next-history").iterdir()}
+        state = g.validate_history(files)
+        self.assertEqual(state["version"], 3)
+        self.assertEqual(state["applied_fci"], g.parse_json(saved[g.STATE], "state")["applied_fci"])
+        for name in g.LEGACY_SCHEMAS[2]:
+            self.assertEqual(files[name], saved[name])
+        self.assertEqual(c.decode(files["S29E7.json"], "S29E7"), NEW)
+        self.assertEqual(set(g.read_site(path / "previous-site", allow_legacy=True)),
+                         g.LEGACY_SCHEMAS[2] | {g.PUBLICATION, c.PROBE})
+        self.assertEqual((self.incoming / "BCAHA.json").read_bytes(), c.encode(NEW))
+
+    def test_schema_two_corruption_cannot_be_migrated(self):
+        saved = self.legacy_snapshot(version=2)
+        for name in ("T15E7.json", "MEP.json"):
+            bad = dict(saved)
+            del bad[name]
+            with self.subTest(missing=name), self.assertRaises(c.FeedError):
+                g.validate_history(bad, allow_legacy=True)
+        bad = dict(saved, **{"T15E7.json": c.encode(NEW)})
+        with self.assertRaises(c.FeedError):
+            g.validate_history(bad, allow_legacy=True)
+
+    def test_schema_three_requires_s29e7_even_with_legacy_enabled(self):
+        _, files = self.make()
+        del files["S29E7.json"]
+        with self.assertRaises(c.FeedError):
+            g.validate_history(files, allow_legacy=True)
+
+    def test_schema_two_rollback_verifies_all_twenty_urls(self):
+        saved = self.legacy_snapshot(version=2)
+        site = g.site_from_history(saved, allow_legacy=True)
+        path = self.root / "rollback-v2"
+        g.write_files(path, site)
+        with patch.object(c, "download_bytes", side_effect=lambda url: (site[url.rsplit('/', 1)[1]], {})) as fetch:
+            g.verify_site(path, "https://user.github.io/quotes", attempts=1, allow_legacy=True)
+        self.assertEqual(fetch.call_count, 20)
+        with self.assertRaises(c.FeedError):
+            g.read_site(path)
+        (path / "T15E7.json").unlink()
+        with self.assertRaises(c.FeedError):
+            g.read_site(path, allow_legacy=True)
+
+    def test_schema_two_load_is_supported_but_old_schema_commit_is_rejected(self):
+        files = self.legacy_snapshot(version=2)
+        client = object.__new__(g.GitHub)
+        names = list(files)
+        entries = [{"path": n, "mode": "100644", "type": "blob", "sha": f"{i+1:040x}"} for i, n in enumerate(names)]
+        replies = [{"tree": {"sha": "b" * 40}}, {"tree": entries}]
+        replies += [{"encoding": "base64", "content": base64.b64encode(files[n]).decode()} for n in names]
+        with patch.object(client, "head", return_value="a" * 40), patch.object(client, "call", side_effect=replies):
+            self.assertEqual(client.load(), ("a" * 40, files))
+        with patch.object(client, "call") as api, self.assertRaises(c.FeedError):
+            client.commit(files, "a" * 40)
+        api.assert_not_called()
+
+    def test_failed_s29e7_addition_does_not_publish_seed(self):
+        saved = self.legacy_snapshot(version=2)
+        class Client:
+            def load(self): return "a" * 40, saved
+        with patch.object(c, "quicktrade", side_effect=c.FeedError("offline")), self.assertRaises(c.FeedError):
+            g.prepare(self.root / "failed-s29e7", self.incoming, Client(), only="S29E7")
+        self.assertFalse((self.root / "failed-s29e7/site").exists())
 
     def test_current_schema_missing_new_bond_is_corruption(self):
         _, files = self.make()

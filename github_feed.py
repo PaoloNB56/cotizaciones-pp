@@ -21,11 +21,13 @@ FCI_NAMES = {"BCACCA.json", "BCAHA.json", "BCMMA.json"}
 STATE = "_state.json"
 PUBLICATION = "publication.json"
 SITE_NAMES = set(core.SEEDS) | {PUBLICATION, core.PROBE}
-# Only this exact, previously published schema may be upgraded. Other missing
+# Only these exact, previously published schemas may be upgraded. Other missing
 # files remain corruption, never a reason to fall back to checkout seeds.
 LEGACY_NAMES = {f"{s}.json" for s in (
     "AL35", "AE38", "AL41", "AN29", "AO28", "S30N6", "X29Y6", "CCL", "MEP",
     "T13F6", "T15D5", "T30J6", "TTJ26", "TTM26", "BCACCA", "BCAHA", "BCMMA")}
+HISTORY_VERSION = 3
+LEGACY_SCHEMAS = {1: LEGACY_NAMES, 2: LEGACY_NAMES | {"T15E7.json"}}
 
 
 def json_bytes(value):
@@ -82,7 +84,8 @@ class GitHub:
         entries = tree.get("tree", [])
         names = {e.get("path") for e in entries}
         if (tree.get("truncated") or len(entries) != len(names)
-                or names not in (set(core.SEEDS) | {STATE}, LEGACY_NAMES | {STATE})):
+                or names not in [set(core.SEEDS) | {STATE},
+                                 *(s | {STATE} for s in LEGACY_SCHEMAS.values())]):
             raise core.FeedError("Histórico GitHub incompleto o con archivos inesperados; no se sustituye por semillas.")
         files = {}
         for entry in entries:
@@ -129,9 +132,9 @@ def validate_history(files, allow_legacy=False):
     state = parse_json(files[STATE], STATE)
     if (not isinstance(state, dict) or set(state) != {"version", "applied_fci", "publication", "probe"}
             or type(state["version"]) is not int
-            or state["version"] not in ((1, 2) if allow_legacy else (2,))):
+            or state["version"] not in ((*LEGACY_SCHEMAS, HISTORY_VERSION) if allow_legacy else (HISTORY_VERSION,))):
         raise core.FeedError("Formato de estado del histórico no reconocido.")
-    expected = LEGACY_NAMES if state["version"] == 1 else set(core.SEEDS)
+    expected = LEGACY_SCHEMAS.get(state["version"], set(core.SEEDS))
     if set(files) != expected | {STATE}:
         raise core.FeedError("El lote histórico no contiene exactamente los archivos previstos.")
     applied = state["applied_fci"]
@@ -245,9 +248,12 @@ def prepare(work, incoming, client=None, initialize=False, only=None):
     else:
         old_state = validate_history(old_files, allow_legacy=True)
         previous = {name: core.decode(body, name) for name, body in old_files.items() if name != STATE}
-        if old_state["version"] == 1:
-            previous["T15E7.json"] = seeds["T15E7.json"]
-            summary("Ampliación del histórico: se incorpora T15E7; las 17 series guardadas se conservan.")
+        if old_state["version"] in LEGACY_SCHEMAS:
+            added = sorted(set(core.SEEDS) - LEGACY_SCHEMAS[old_state["version"]])
+            saved_count = len(previous)
+            previous.update({name: seeds[name] for name in added})
+            summary(f"Ampliación del histórico: se incorpora {', '.join(added)}; "
+                    f"las {saved_count} series guardadas se conservan.")
         for name in core.SEEDS:
             core.require_coverage(seeds[name], previous[name], name)
         applied = old_state["applied_fci"]
@@ -276,7 +282,7 @@ def prepare(work, incoming, client=None, initialize=False, only=None):
                           outcome="retained_after_error", error=failures[name])
         reports.append(report)
     publication = {"generation": uuid.uuid4().hex, "generated_utc": datetime.now(timezone.utc).isoformat(), "files": reports}
-    state = {"version": 2, "applied_fci": applied, "publication": publication,
+    state = {"version": HISTORY_VERSION, "applied_fci": applied, "publication": publication,
              "probe": [{"date": core.TODAY().isoformat(), "close": uuid.uuid4().int % 1_000_000_000 + 1}]}
     history = {**{n: core.encode(candidates[n]) for n in core.SEEDS}, STATE: json_bytes(state)}
     validate_history(history)
@@ -303,10 +309,20 @@ def prepare(work, incoming, client=None, initialize=False, only=None):
 
 def read_site(directory, allow_legacy=False):
     entries = list(directory.iterdir())
-    allowed = (SITE_NAMES, LEGACY_NAMES | {PUBLICATION, core.PROBE}) if allow_legacy else (SITE_NAMES,)
+    allowed = [SITE_NAMES]
+    if allow_legacy:
+        allowed.extend(names | {PUBLICATION, core.PROBE} for names in LEGACY_SCHEMAS.values())
     if {p.name for p in entries} not in allowed or any(not p.is_file() or p.is_symlink() for p in entries):
         raise core.FeedError("El sitio no contiene exactamente las cotizaciones previstas, publication.json y la prueba sintética.")
-    return {p.name: p.read_bytes() for p in entries}
+    files = {p.name: p.read_bytes() for p in entries}
+    manifest = parse_json(files[PUBLICATION], PUBLICATION)
+    reports = manifest.get("files") if isinstance(manifest, dict) else None
+    names = set(files) - {PUBLICATION, core.PROBE}
+    if (not isinstance(reports, list) or len(reports) != len(names)
+            or any(not isinstance(r, dict) for r in reports)
+            or {r.get("file") for r in reports} != names):
+        raise core.FeedError("El sitio no coincide con la lista de series de su manifest.")
+    return files
 
 
 def verify_site(directory, base_url, attempts=13, pause=5, allow_legacy=False):
